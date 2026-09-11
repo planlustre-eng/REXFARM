@@ -1,746 +1,1252 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>質感像素恐龍記帳</title>
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
-
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            pixelBg: '#181A1B',
-            pixelCard: '#222529',
-            pixelAccent: '#52B788',
-            pixelGold: '#F4A261',
-            pixelRed: '#E63946',
-            pixelText: '#E9ECEF'
-          }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>像素恐龍記帳 App</title>
+    <!-- Chart.js for Expense Trend & Percentage -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #f4f6f9;
+            --card-bg: #ffffff;
+            --primary-color: #2e7d32;
+            --primary-light: #e8f5e9;
+            --accent-orange: #ef6c00;
+            --accent-red: #c62828;
+            --text-main: #2c3e50;
+            --text-sub: #7f8c8d;
+            --border-color: #e2e8f0;
+            --shadow: 0 4px 12px rgba(0,0,0,0.06);
+            --radius-lg: 16px;
+            --radius-md: 12px;
         }
-      }
-    }
-  </script>
-  <style>
-    body {
-      background-color: #0F1011;
-      font-family: 'Noto Sans TC', -apple-system, sans-serif;
-      touch-action: manipulation;
-    }
-    
-    .pixelated {
-      image-rendering: pixelated;
-      image-rendering: crisp-edges;
-    }
 
-    .pixel-font {
-      font-family: 'Press Start 2P', monospace;
-    }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        body {
+            background-color: #121212;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
 
-    @keyframes pixelBounce {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-3px); }
-    }
-    .pixel-dino-anim {
-      animation: pixelBounce 0.9s steps(2) infinite;
-    }
+        /* App Container (Mobile Frame) */
+        .app-container {
+            width: 100%;
+            max-width: 480px;
+            height: 100vh;
+            max-height: 900px;
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 0 25px rgba(0,0,0,0.5);
+            overflow: hidden;
+        }
 
-    /* 恐龍行走動畫 */
-    #dinoContainer {
-      transition: left 0.3s linear, transform 0.2s ease;
-    }
-  </style>
+        @media (min-width: 480px) {
+            .app-container {
+                height: 92vh;
+                border-radius: 28px;
+            }
+        }
+
+        /* Top Header */
+        .header {
+            background: linear-gradient(135deg, #1b5e20, #2e7d32);
+            color: #ffffff;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Scrollable Content Area */
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            padding-bottom: 90px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* Card Component */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            padding: 18px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(0,0,0,0.03);
+        }
+
+        /* --- Dino Sanctuary --- */
+        .dino-sanctuary {
+            background: linear-gradient(180deg, #e8f5e9 0%, #ffffff 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            text-align: center;
+            border: 2px solid #a5d6a7;
+        }
+
+        .dino-header-info {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .dino-name-box {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255,255,255,0.8);
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid #c8e6c9;
+            cursor: pointer;
+        }
+
+        .dino-name {
+            font-weight: 700;
+            color: var(--text-main);
+            font-size: 15px;
+        }
+
+        .rename-hint {
+            font-size: 11px;
+            color: #666;
+            background: #eee;
+            padding: 2px 6px;
+            border-radius: 8px;
+        }
+
+        .dino-stage-badge {
+            font-size: 12px;
+            font-weight: 600;
+            background: #2e7d32;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+        }
+
+        /* Dino Display Box */
+        .dino-display {
+            height: 140px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            margin: 10px 0;
+        }
+
+        /* Pixel Dino SVG Animations */
+        .dino-sprite {
+            image-rendering: pixelated;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15));
+        }
+
+        .bounce {
+            animation: dinoJump 0.5s ease;
+        }
+
+        @keyframes dinoJump {
+            0% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-20px) scale(1.1); }
+            100% { transform: translateY(0) scale(1); }
+        }
+
+        .egg-wobble {
+            animation: eggShake 1.2s infinite ease-in-out;
+        }
+
+        @keyframes eggShake {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-8deg); }
+            75% { transform: rotate(8deg); }
+        }
+
+        /* Progress Bars */
+        .dino-stats {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 6px;
+        }
+
+        .stat-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .progress-bar-bg {
+            flex: 1;
+            height: 12px;
+            background: #e0e0e0;
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.4s ease;
+        }
+
+        .bg-exp { background: linear-gradient(90deg, #4caf50, #2e7d32); }
+
+        .feed-btn {
+            background: #f57c00;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 3px 6px rgba(245, 124, 0, 0.3);
+            transition: transform 0.1s;
+        }
+
+        .feed-btn:active { transform: scale(0.95); }
+        .feed-btn:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; }
+
+        /* --- Overview Cards (Enlarged) --- */
+        .summary-card {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: #ffffff;
+        }
+
+        .summary-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .summary-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .summary-box {
+            padding: 14px 12px;
+            border-radius: var(--radius-md);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .summary-box.income {
+            background-color: #f1f8e9;
+            border-left: 5px solid #4caf50;
+        }
+
+        .summary-box.expense {
+            background-color: #ffebee;
+            border-left: 5px solid #f44336;
+        }
+
+        .summary-label {
+            font-size: 13px;
+            color: var(--text-sub);
+            font-weight: 600;
+        }
+
+        .summary-amount {
+            font-size: 22px; /* Amplified Font Size */
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .summary-box.income .summary-amount { color: #2e7d32; }
+        .summary-box.expense .summary-amount { color: #c62828; }
+
+        /* --- Monthly Settlement & Charts --- */
+        .analytics-card {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .tabs-header {
+            display: flex;
+            background: #f0f2f5;
+            border-radius: 10px;
+            padding: 3px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 8px 0;
+            border: none;
+            background: transparent;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-sub);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .tab-btn.active {
+            background: #ffffff;
+            color: var(--primary-color);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 220px;
+        }
+
+        .category-ratio-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 10px;
+            max-height: 180px;
+            overflow-y: auto;
+        }
+
+        .ratio-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 13px;
+            padding: 6px 0;
+            border-bottom: 1px dashed var(--border-color);
+        }
+
+        .ratio-item-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .color-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        /* --- Record List --- */
+        .record-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .record-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            background: #fafafa;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+        }
+
+        .record-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: #e8f5e9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            margin-right: 10px;
+        }
+
+        .record-details {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .record-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .record-sub {
+            font-size: 12px;
+            color: var(--text-sub);
+            margin-top: 2px;
+        }
+
+        .record-amount {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .amount-expense { color: var(--accent-red); }
+        .amount-income { color: var(--primary-color); }
+
+        /* --- Floating Add Button --- */
+        .fab-add {
+            position: absolute;
+            bottom: 85px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2e7d32, #1b5e20);
+            color: white;
+            font-size: 28px;
+            border: none;
+            box-shadow: 0 4px 15px rgba(46, 125, 50, 0.4);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            transition: transform 0.2s;
+        }
+
+        .fab-add:active { transform: scale(0.92); }
+
+        /* --- Enlarge Bottom Navigation Bar --- */
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 72px; /* Enlarged Bar */
+            background: #ffffff;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 20;
+            padding-bottom: env(safe-area-inset-bottom);
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            flex: 1;
+            height: 100%;
+            color: var(--text-sub);
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 13px; /* Enlarged Font */
+            font-weight: 600;
+        }
+
+        .nav-item.active { color: var(--primary-color); }
+
+        .nav-icon {
+            font-size: 22px; /* Enlarged Icon */
+        }
+
+        /* --- Modal Layout (Separated Fields) --- */
+        .modal-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            width: 100%;
+            background: white;
+            border-top-left-radius: 24px;
+            border-top-right-radius: 24px;
+            padding: 24px 20px 30px 20px;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-overlay.active .modal-content { transform: translateY(0); }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #999;
+            cursor: pointer;
+        }
+
+        /* Type Selector */
+        .type-toggle {
+            display: flex;
+            background: #f0f2f5;
+            border-radius: var(--radius-md);
+            padding: 4px;
+            margin-bottom: 16px;
+        }
+
+        .type-btn {
+            flex: 1;
+            padding: 10px 0;
+            border: none;
+            background: transparent;
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--text-sub);
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .type-btn.active.expense { background: var(--accent-red); color: white; }
+        .type-btn.active.income { background: var(--primary-color); color: white; }
+
+        /* Form Grouping with Proper Spacing */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1.5px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 15px;
+            outline: none;
+            background: #fdfdfd;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            border-color: var(--primary-color);
+            background: #fff;
+        }
+
+        input[type="date"].form-input {
+            cursor: pointer;
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .cat-chip {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px 4px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            background: #fafafa;
+            cursor: pointer;
+            font-size: 12px;
+            gap: 4px;
+            transition: all 0.2s;
+        }
+
+        .cat-chip.selected {
+            border-color: var(--primary-color);
+            background: var(--primary-light);
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(46, 125, 50, 0.3);
+            margin-top: 8px;
+        }
+
+        /* Rename Modal */
+        .rename-modal {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            width: 85%;
+            max-width: 360px;
+            background: white;
+            padding: 20px;
+            border-radius: 18px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            z-index: 120;
+            display: none;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .rename-modal.active {
+            display: flex;
+            animation: popIn 0.2s forwards ease;
+        }
+
+        @keyframes popIn {
+            to { transform: translate(-50%, -50%) scale(1); }
+        }
+    </style>
 </head>
-<body class="flex justify-center items-center min-h-screen sm:py-4">
+<body>
 
-  <!-- 手機外框容器 -->
-  <div class="w-full max-w-md h-[100vh] sm:h-[844px] bg-pixelBg text-pixelText sm:rounded-[32px] shadow-2xl flex flex-col overflow-hidden relative border-gray-800 sm:border-4">
-    
-    <!-- 頂部精簡 Header -->
-    <header class="bg-pixelCard px-4 py-2.5 flex justify-between items-center border-b border-gray-800 z-10 flex-shrink-0">
-      <div class="flex items-center gap-2">
-        <span class="pixel-font text-[10px] text-pixelAccent tracking-widest">DINO PARK</span>
-        <span class="text-[10px] bg-gray-800 text-pixelGold px-2 py-0.5 rounded border border-gray-700">等級 <span id="farmLevel">1</span></span>
-      </div>
-      <div class="text-[11px] flex items-center gap-2">
-        <button onclick="spawnMeatFromHeader()" class="text-gray-300 hover:text-white bg-gray-800/80 px-2 py-0.5 rounded border border-gray-700">
-          🍖 肉乾 <strong id="feedCount" class="text-pixelGold">3</strong>
-        </button>
-        <button onclick="exportCSV()" class="bg-gray-800 hover:bg-gray-700 text-pixelText border border-gray-600 text-[10px] py-0.5 px-2.5 rounded transition">匯出資料</button>
-      </div>
+<div class="app-container">
+    <!-- Header -->
+    <header class="header">
+        <h1>🦖 像素恐龍記帳</h1>
+        <span style="font-size: 12px; background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 10px;">V2.0 升級版</span>
     </header>
 
-    <!-- 藍天綠地像素恐龍公園橫幅 (140px) -->
-    <div id="parkArea" onclick="handleParkClick(event)" class="border-b-2 border-gray-800 relative overflow-hidden flex-shrink-0 h-[140px] flex flex-col justify-between pixelated select-none cursor-pointer">
-      
-      <!-- 天空背景 -->
-      <div class="absolute inset-0 bg-[#70C5CE] z-0"></div>
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
 
-      <!-- 像素白雲 -->
-      <div class="absolute top-2 left-4 w-12 h-4 opacity-80 z-0">
-        <svg viewBox="0 0 24 8" class="w-full h-full pixelated">
-          <path d="M4 2 h16 v2 h-16 z M2 4 h20 v2 h-20 z" fill="#FFFFFF"/>
-        </svg>
-      </div>
-      <div class="absolute top-4 right-8 w-16 h-5 opacity-70 z-0">
-        <svg viewBox="0 0 24 8" class="w-full h-full pixelated">
-          <path d="M4 2 h16 v2 h-16 z M2 4 h20 v2 h-20 z" fill="#FFFFFF"/>
-        </svg>
-      </div>
-
-      <!-- 遠處遠山 -->
-      <div class="absolute bottom-6 left-0 right-0 h-10 z-0">
-        <svg viewBox="0 0 100 25" preserveAspectRatio="none" class="w-full h-full pixelated">
-          <polygon points="0,25 15,8 35,25" fill="#2D6A4F" />
-          <polygon points="25,25 50,5 75,25" fill="#1B4332" />
-          <polygon points="60,25 80,10 100,25" fill="#2D6A4F" />
-        </svg>
-      </div>
-
-      <!-- 草皮 -->
-      <div class="absolute bottom-0 left-0 right-0 h-8 bg-[#52B788] border-t-2 border-[#40916C] z-0">
-        <div class="w-full h-1 bg-[#74C69D]"></div>
-      </div>
-
-      <!-- 頂部資訊條：半透明連續記帳 + 半透明恐龍互動對話框 -->
-      <div class="flex items-center gap-1.5 p-2 z-10 relative">
-        <div class="text-[10px] bg-black/50 backdrop-blur-sm text-white px-2 py-1 rounded border border-white/10 shrink-0">
-          連續 3 天
-        </div>
-
-        <!-- 半透明互動對話框 -->
-        <div id="dialogBox" class="flex-1 bg-black/50 backdrop-blur-sm border border-white/10 rounded px-2 py-1 text-[10px] text-white flex justify-between items-center overflow-hidden">
-          <span id="dialogText" class="truncate">點擊草地放置肉乾餵食恐龍（雙擊改名）</span>
-          <button onclick="closeDialog(event)" class="text-gray-400 hover:text-white ml-1 shrink-0">✕</button>
-        </div>
-
-        <!-- 獎勵提示 -->
-        <div id="farmToast" class="hidden bg-pixelGold text-black text-[10px] px-2 py-1 font-bold border border-black shadow shrink-0">
-          肉乾 +1
-        </div>
-      </div>
-
-      <!-- 恐龍與物件區域 (絕對定位以支援行走) -->
-      <div class="relative w-full h-16 z-10 mb-1">
-        
-        <!-- 恐龍巢穴 (固定左側) -->
-        <div onclick="clickNest(event)" class="absolute left-4 bottom-0 text-center group cursor-pointer z-10">
-          <div class="text-xl transition-transform group-hover:scale-105">🌋</div>
-          <span class="text-[8px] bg-black/50 backdrop-blur-sm text-white px-1 py-0.2 rounded border border-white/10">巢穴</span>
-        </div>
-
-        <!-- 帶骨頭的肉乾 (動態放置) -->
-        <div id="meatItem" class="hidden absolute bottom-2 z-10 -translate-x-1/2 transition-all duration-300">
-          <div class="w-5 h-5">
-            <svg viewBox="0 0 16 16" class="w-full h-full pixelated">
-              <!-- 骨頭兩端 -->
-              <path d="M1 7 h2 v2 h-2 z M13 7 h2 v2 h-2 z" fill="#FFFFFF"/>
-              <!-- 肉身 -->
-              <path d="M3 5 h10 v6 h-10 z" fill="#E63946"/>
-              <path d="M5 6 h6 v4 h-6 z" fill="#C5221F"/>
-              <path d="M4 8 h2 v2 h-2 z" fill="#F4A261"/>
-            </svg>
-          </div>
-        </div>
-
-        <!-- 8-bit 像素小恐龍 (可移動) -->
-        <div id="dinoContainer" 
-             onclick="clickDino(event)" 
-             ondblclick="renameDino(event)" 
-             class="absolute bottom-0 text-center group cursor-pointer z-20 -translate-x-1/2" 
-             style="left: 50%;">
-          <div id="dinoSprite" class="w-9 h-9 mx-auto relative pixel-dino-anim">
-            <svg viewBox="0 0 16 16" class="w-full h-full pixelated">
-              <!-- 恐龍身體 (綠) -->
-              <path d="M7 2 h5 v2 h-5 z M6 4 h7 v2 h-7 z M5 6 h8 v2 h-8 z M4 8 h9 v4 h-9 z M3 10 h2 v3 h-2 z" fill="#52B788"/>
-              <!-- 背脊 (深綠) -->
-              <path d="M6 2 h1 v1 h-1 z M5 4 h1 v1 h-1 z M4 6 h1 v1 h-1 z" fill="#1B4332"/>
-              <!-- 肚皮 (淺綠/黃) -->
-              <path d="M8 9 h3 v3 h-3 z" fill="#B7E4C7"/>
-              <!-- 眼睛 (黑) -->
-              <path d="M10 3 h1 v1 h-1 z" fill="#000"/>
-              <!-- 手腳 (綠/橘) -->
-              <path d="M11 8 h2 v1 h-2 z M5 12 h2 v2 h-2 z M9 12 h2 v2 h-2 z" fill="#40916C"/>
-            </svg>
-          </div>
-          <span id="dinoNameLabel" class="text-[8px] bg-black/50 backdrop-blur-sm text-pixelGold px-1 py-0.2 rounded border border-pixelGold/30">雷克斯</span>
-        </div>
-
-        <!-- 恐龍蛋 (固定右側，顯示孵化剩餘天數) -->
-        <div onclick="clickEgg(event)" class="absolute right-4 bottom-0 text-center group cursor-pointer z-10">
-          <div class="text-xl transition-transform group-hover:scale-105">🥚</div>
-          <span class="text-[8px] bg-black/50 backdrop-blur-sm text-white px-1 py-0.2 rounded border border-white/10">孵化中 <strong id="eggDaysLeft" class="text-pixelGold">3</strong>天</span>
-        </div>
-
-      </div>
-
-    </div>
-
-    <!-- 主要內容區 -->
-    <main class="flex-1 overflow-y-auto p-3.5 space-y-3.5 no-scrollbar pb-20" id="mainContent">
-
-      <!-- 頁籤一：總覽與明細 -->
-      <section id="tab-overview" class="space-y-3.5">
-        
-        <!-- 資產數據看板 -->
-        <div class="bg-pixelCard rounded-xl p-3.5 border border-gray-800 space-y-3">
-          <div>
-            <div class="text-[11px] text-gray-400 tracking-wide">本月淨結餘</div>
-            <div class="text-2xl font-bold text-pixelAccent mt-0.5" id="statBalance">$ 0</div>
-          </div>
-          
-          <div class="grid grid-cols-2 gap-3 pt-2.5 border-t border-gray-800/80 text-[12px]">
-            <div>
-              <span class="text-gray-400 text-[10px] block">累積收入</span>
-              <span class="text-pixelAccent font-semibold" id="statIncome">$ 0</span>
+        <!-- 1. Dino Sanctuary -->
+        <section class="card dino-sanctuary">
+            <div class="dino-header-info">
+                <!-- Double click rename -->
+                <div class="dino-name-box" id="dinoNameContainer" title="雙擊可修改恐龍名字">
+                    <span class="dino-name" id="dinoNameDisplay">小綠龍</span>
+                    <span class="rename-hint">雙擊改名</span>
+                </div>
+                <div class="dino-stage-badge" id="dinoStageBadge">LV.1 綠色幼龍</div>
             </div>
-            <div>
-              <span class="text-gray-400 text-[10px] block">累積支出</span>
-              <span class="text-pixelRed font-semibold" id="statExpense">$ 0</span>
+
+            <div class="dino-display">
+                <!-- SVG Pixel Dino -->
+                <svg id="dinoSvg" class="dino-sprite" width="100" height="100" viewBox="0 0 32 32"></svg>
             </div>
-          </div>
-        </div>
 
-        <!-- 預算進度條 -->
-        <div class="bg-pixelCard p-3.5 rounded-xl border border-gray-800 space-y-2">
-          <div class="flex justify-between items-center text-xs">
-            <span class="font-medium text-gray-200">本月財務配額</span>
-            <button onclick="openBudgetModal()" class="text-[11px] text-pixelGold hover:underline">調整配額</button>
-          </div>
+            <!-- Stats & Feeding -->
+            <div class="dino-stats">
+                <div class="stat-row">
+                    <span>🥩 肉肉庫存: <strong id="meatCountText" style="color:#f57c00; font-size:15px;">0</strong></span>
+                    <button class="feed-btn" id="feedBtn" onclick="feedDino()">
+                        <span>餵食恐龍 (+10 EXP)</span>
+                    </button>
+                </div>
 
-          <div class="w-full bg-gray-800 h-2.5 rounded-full overflow-hidden p-0.5 border border-gray-700">
-            <div id="budgetProgressBar" class="bg-pixelAccent h-full rounded-full transition-all duration-300" style="width: 0%"></div>
-          </div>
+                <div class="stat-row">
+                    <span style="min-width: 75px;">⭐ 進化經驗:</span>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill bg-exp" id="expBar" style="width: 0%;"></div>
+                    </div>
+                    <span id="expText" style="font-size: 11px;">0/100</span>
+                </div>
+            </div>
+        </section>
 
-          <div class="flex justify-between text-[10px] text-gray-400">
-            <span>已使用 <strong id="budgetUsedPercent" class="text-gray-200">0%</strong></span>
-            <span>剩餘額度 $<strong id="budgetRemaining" class="text-gray-200">0</strong></span>
-          </div>
-        </div>
+        <!-- 2. Overview (Enlarged totals) -->
+        <section class="card summary-card">
+            <div class="summary-header">
+                <span class="summary-title">📊 財務總覽</span>
+                <span style="font-size: 12px; color: var(--text-sub);">累積總計</span>
+            </div>
+            <div class="summary-grid">
+                <div class="summary-box income">
+                    <span class="summary-label">累積收入</span>
+                    <span class="summary-amount" id="totalIncomeText">$ 0</span>
+                </div>
+                <div class="summary-box expense">
+                    <span class="summary-label">累積支出</span>
+                    <span class="summary-amount" id="totalExpenseText">$ 0</span>
+                </div>
+            </div>
+        </section>
 
-        <!-- 支出類別占比圓餅圖 -->
-        <div class="bg-pixelCard p-3.5 rounded-xl border border-gray-800">
-          <div class="text-xs font-medium text-gray-200 mb-2">支出結構分析</div>
-          <div class="h-36 relative flex justify-center items-center">
-            <canvas id="categoryChart"></canvas>
-          </div>
-        </div>
+        <!-- 3. Monthly Settlement & Analytics -->
+        <section class="card analytics-card">
+            <div class="tabs-header">
+                <button class="tab-btn active" onclick="switchAnalyticsTab('trend')">📈 花費趨勢曲線</button>
+                <button class="tab-btn" onclick="switchAnalyticsTab('pie')">🍕 支出類別占比</button>
+            </div>
 
-        <!-- 動態歷程紀錄 -->
-        <div class="space-y-2">
-          <div class="flex justify-between items-center px-0.5">
-            <span class="text-xs font-medium text-gray-400">近期交易紀錄</span>
-          </div>
-          <div id="recordList" class="space-y-2">
-            <!-- 動態渲染紀錄 -->
-          </div>
-        </div>
+            <div class="chart-container">
+                <canvas id="analyticsChart"></canvas>
+            </div>
 
-      </section>
+            <div class="category-ratio-list" id="categoryRatioList" style="display: none;"></div>
+        </section>
 
-      <!-- 頁籤二：類別管理 -->
-      <section id="tab-categories" class="hidden space-y-3.5">
-        <div class="bg-pixelCard p-3.5 rounded-xl border border-gray-800 space-y-2.5">
-          <span class="text-xs font-medium text-gray-200 block">新增自訂類別</span>
-          <div class="flex gap-2">
-            <input type="text" id="newCategoryInput" placeholder="輸入類別名稱..." class="flex-1 bg-gray-900/80 px-3 py-1.5 text-xs text-white border border-gray-700 focus:border-pixelAccent outline-none rounded-lg" />
-            <button onclick="addCustomCategory()" class="bg-pixelAccent hover:bg-emerald-600 text-gray-950 font-medium text-xs px-3.5 py-1.5 rounded-lg transition">新增</button>
-          </div>
-        </div>
-
-        <div class="bg-pixelCard p-3.5 rounded-xl border border-gray-800">
-          <span class="text-xs font-medium text-gray-200 block mb-2">現有類別列表</span>
-          <div id="categoryList" class="divide-y divide-gray-800/60">
-            <!-- 動態渲染類別 -->
-          </div>
-        </div>
-      </section>
-
+        <!-- Recent Records -->
+        <section class="card" style="margin-bottom: 20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <span class="summary-title">📝 明細紀錄</span>
+                <span style="font-size:12px; color:var(--text-sub);" id="recordCountText">共 0 筆</span>
+            </div>
+            <div class="record-list" id="recordList"></div>
+        </section>
     </main>
 
-    <!-- 底部導覽列 -->
-    <nav class="bg-pixelCard border-t border-gray-800 px-8 py-2 flex justify-around items-center absolute bottom-0 w-full z-10">
-      <button onclick="switchTab('overview')" id="nav-overview" class="flex flex-col items-center gap-1 text-pixelAccent">
-        <span class="text-xs font-medium">總覽紀錄</span>
-      </button>
+    <!-- Floating Add Button -->
+    <button class="fab-add" onclick="openAddModal()">+</button>
 
-      <!-- 新增紀錄按鈕 -->
-      <button onclick="openAddModal()" class="bg-pixelGold hover:bg-amber-600 text-gray-950 text-xl font-bold w-10 h-10 rounded-full flex items-center justify-center -mt-5 border-2 border-pixelBg shadow-lg transition active:scale-95">
-        ＋
-      </button>
-
-      <button onclick="switchTab('categories')" id="nav-categories" class="flex flex-col items-center gap-1 text-gray-400">
-        <span class="text-xs font-medium">類別管理</span>
-      </button>
+    <!-- Enlarged Bottom Navigation Bar -->
+    <nav class="bottom-nav">
+        <button class="nav-item active" onclick="switchNav('records')">
+            <span class="nav-icon">📋</span>
+            <span>總覽紀錄</span>
+        </button>
+        <button class="nav-item" onclick="switchNav('categories')">
+            <span class="nav-icon">🏷️</span>
+            <span>類別管理</span>
+        </button>
     </nav>
 
-    <!-- 新增紀錄 Modal (精簡尺寸，維持原介面精緻度) -->
-    <div id="addModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-end flex-col z-50 hidden">
-      <div class="bg-pixelCard rounded-t-2xl p-3.5 space-y-3 border-t border-gray-700 max-w-md mx-auto w-full">
-        
-        <div class="flex justify-between items-center border-b border-gray-800 pb-1.5">
-          <div class="flex gap-2">
-            <button id="btnTypeExpense" onclick="setType('支出')" class="text-xs py-1 px-3.5 rounded-lg font-medium transition bg-pixelRed text-white">支出</button>
-            <button id="btnTypeIncome" onclick="setType('收入')" class="text-xs py-1 px-3.5 rounded-lg font-medium transition bg-gray-800 text-gray-300">收入</button>
-          </div>
-          <button onclick="closeAddModal()" class="text-gray-400 hover:text-white text-base px-1">✕</button>
+    <!-- Modal Form (Separated Date & Note fields) -->
+    <div class="modal-overlay" id="addModalOverlay" onclick="closeAddModalOutside(event)">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">新增記帳紀錄</span>
+                <button class="modal-close" onclick="closeAddModal()">&times;</button>
+            </div>
+
+            <div class="type-toggle">
+                <button class="type-btn active expense" id="typeExpenseBtn" onclick="setRecordType('expense')">支出</button>
+                <button class="type-btn income" id="typeIncomeBtn" onclick="setRecordType('income')">收入</button>
+            </div>
+
+            <form onsubmit="handleFormSubmit(event)">
+                <!-- 金額 -->
+                <div class="form-group">
+                    <label class="form-label">💰 金額 ($)</label>
+                    <input type="number" id="inputAmount" class="form-input" placeholder="0" required min="1" step="any">
+                </div>
+
+                <!-- 類別 -->
+                <div class="form-group">
+                    <label class="form-label">🏷️ 類別</label>
+                    <div class="category-grid" id="categoryGrid"></div>
+                </div>
+
+                <!-- 日期 (好用的行事曆選單) -->
+                <div class="form-group">
+                    <label class="form-label">📅 日期 (點擊選擇行事曆)</label>
+                    <input type="date" id="inputDate" class="form-input" required>
+                </div>
+
+                <!-- 備註欄位獨立分隔 -->
+                <div class="form-group">
+                    <label class="form-label">✏️ 備註說明</label>
+                    <input type="text" id="inputNote" class="form-input" placeholder="例如：午餐麥當勞、薪水發放...">
+                </div>
+
+                <button type="submit" class="btn-submit">確認新增 (+1 肉肉 🥩)</button>
+            </form>
         </div>
-
-        <div class="space-y-2.5">
-          <!-- 金額輸入 -->
-          <div>
-            <label class="text-[10px] text-gray-400 block mb-0.5">交易金額</label>
-            <div class="bg-gray-900 border border-gray-700 rounded-lg px-2.5 py-1.5 flex items-center">
-              <span class="text-gray-400 mr-2 text-xs">$</span>
-              <input type="number" id="inputAmount" inputmode="numeric" pattern="[0-9]*" placeholder="0" class="bg-transparent w-full text-base font-bold text-pixelGold outline-none" />
-            </div>
-          </div>
-
-          <!-- 類別選擇 -->
-          <div>
-            <label class="text-[10px] text-gray-400 block mb-0.5">交易類別</label>
-            <div id="categoryChips" class="flex gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
-              <!-- 動態生成純文字類別標籤 -->
-            </div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-2">
-            <div>
-              <label class="text-[10px] text-gray-400 block mb-0.5">日期</label>
-              <input type="date" id="inputDate" class="w-full bg-gray-900 text-xs p-1.5 text-white border border-gray-700 rounded-lg outline-none" />
-            </div>
-            <div>
-              <label class="text-[10px] text-gray-400 block mb-0.5">備註說明</label>
-              <input type="text" id="inputNote" placeholder="細節..." class="w-full bg-gray-900 text-xs p-1.5 text-white border border-gray-700 rounded-lg outline-none" />
-            </div>
-          </div>
-        </div>
-
-        <button onclick="saveRecord()" class="w-full bg-pixelAccent hover:bg-emerald-600 text-gray-950 font-bold text-xs py-2 rounded-lg transition mt-1">
-          完成紀錄（餵養恐龍 肉乾 +1）
-        </button>
-      </div>
     </div>
 
-    <!-- 預算 Modal -->
-    <div id="budgetModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm flex justify-center items-center p-4 z-50 hidden">
-      <div class="bg-pixelCard rounded-xl p-4 w-full max-w-xs space-y-3.5 border border-gray-700">
-        <h3 class="font-medium text-xs text-gray-200 border-b border-gray-800 pb-2">調整財務配額</h3>
-        
-        <div>
-          <label class="text-[10px] text-gray-400 block mb-1">月度預算上限</label>
-          <input type="number" id="budgetAmountInput" inputmode="numeric" pattern="[0-9]*" placeholder="例如：20000" class="w-full bg-gray-900 text-xs p-2.5 text-white border border-gray-700 rounded-lg outline-none" />
+    <!-- Rename Modal -->
+    <div class="rename-modal" id="renameModal">
+        <h3 style="font-size:16px; font-weight:700;">✏️ 修改恐龍名字</h3>
+        <input type="text" id="renameInput" class="form-input" placeholder="請輸入新名字..." maxlength="10">
+        <div style="display:flex; gap:8px; justify-content:flex-end;">
+            <button onclick="closeRenameModal()" style="padding:8px 14px; border:none; background:#eee; border-radius:8px; cursor:pointer;">取消</button>
+            <button onclick="saveDinoName()" style="padding:8px 14px; border:none; background:var(--primary-color); color:white; border-radius:8px; font-weight:bold; cursor:pointer;">儲存</button>
         </div>
-
-        <div class="flex gap-2 pt-1">
-          <button onclick="closeBudgetModal()" class="flex-1 bg-gray-800 text-gray-300 py-1.5 text-xs rounded-lg">取消</button>
-          <button onclick="saveBudget()" class="flex-1 bg-pixelAccent text-gray-950 font-medium py-1.5 text-xs rounded-lg">儲存設定</button>
-        </div>
-      </div>
     </div>
+</div>
 
-  </div>
-
-  <script>
-    let records = JSON.parse(localStorage.getItem('app_records_dino')) || [
-      { id: 1, type: '支出', amount: 120, category: '餐飲', date: '2026-09-11', note: '午餐' },
-      { id: 2, type: '支出', amount: 55, category: '交通', date: '2026-09-11', note: '捷運' },
-      { id: 3, type: '收入', amount: 50000, category: '薪資', date: '2026-09-01', note: '月薪入帳' }
-    ];
-
-    let categories = JSON.parse(localStorage.getItem('app_categories_dino')) || [
-      { name: '餐飲' },
-      { name: '交通' },
-      { name: '購物' },
-      { name: '居住' },
-      { name: '娛樂' },
-      { name: '薪資' }
-    ];
-
-    let budget = JSON.parse(localStorage.getItem('app_budget_dino')) || { amount: 20000 };
-    let farmState = JSON.parse(localStorage.getItem('app_farm_dino')) || { 
-      level: 1, 
-      feed: 3, 
-      dinoName: '雷克斯',
-      eggDays: 3,
-      dinoPosPercent: 50
+<script>
+    const CATEGORIES = {
+        expense: [
+            { id: 'food', name: '餐飲', icon: '🍔' },
+            { id: 'transport', name: '交通', icon: '🚗' },
+            { id: 'shopping', name: '購物', icon: '🛍️' },
+            { id: 'entertainment', name: '娛樂', icon: '🎮' },
+            { id: 'housing', name: '居住', icon: '🏠' },
+            { id: 'medical', name: '醫療', icon: '💊' },
+            { id: 'other_exp', name: '其他', icon: '📦' }
+        ],
+        income: [
+            { id: 'salary', name: '薪水', icon: '💵' },
+            { id: 'bonus', name: '獎金', icon: '🎁' },
+            { id: 'investment', name: '投資', icon: '📈' },
+            { id: 'other_inc', name: '其他', icon: '💰' }
+        ]
     };
 
-    let currentType = '支出';
-    let selectedCategory = '餐飲';
-    let chartInstance = null;
-    let isMoving = false;
-
-    window.onload = () => {
-      document.getElementById('inputDate').valueAsDate = new Date();
-      renderAll();
-    };
-
-    function saveToStorage() {
-      localStorage.setItem('app_records_dino', JSON.stringify(records));
-      localStorage.setItem('app_categories_dino', JSON.stringify(categories));
-      localStorage.setItem('app_budget_dino', JSON.stringify(budget));
-      localStorage.setItem('app_farm_dino', JSON.stringify(farmState));
-    }
-
-    function renderAll() {
-      renderRecords();
-      renderBudget();
-      renderCategoryChips();
-      renderCategoryManagement();
-      renderChart();
-      renderFarm();
-      saveToStorage();
-    }
-
-    function renderFarm() {
-      document.getElementById('farmLevel').innerText = farmState.level;
-      document.getElementById('feedCount').innerText = farmState.feed;
-      document.getElementById('dinoNameLabel').innerText = farmState.dinoName || '雷克斯';
-      document.getElementById('eggDaysLeft').innerText = farmState.eggDays !== undefined ? farmState.eggDays : 3;
-      
-      const dino = document.getElementById('dinoContainer');
-      dino.style.left = `${farmState.dinoPosPercent || 50}%`;
-    }
-
-    /* --- 恐龍餵養與動態行走邏輯 --- */
-    function handleParkClick(e) {
-      // 避免點擊特定元素觸發草地放置
-      if (e.target.closest('#dinoContainer') || e.target.closest('#dialogBox') || e.target.closest('button')) return;
-
-      const park = document.getElementById('parkArea');
-      const rect = park.getBoundingClientRect();
-      const clickX = e.clientX - rect.left;
-      const targetPercent = Math.max(15, Math.min(85, (clickX / rect.width) * 100));
-
-      dropMeatAndWalk(targetPercent);
-    }
-
-    function spawnMeatFromHeader() {
-      // 預設在恐龍面前或右側放肉乾
-      let targetPercent = (farmState.dinoPosPercent || 50) + 20;
-      if (targetPercent > 85) targetPercent = (farmState.dinoPosPercent || 50) - 20;
-      dropMeatAndWalk(targetPercent);
-    }
-
-    function dropMeatAndWalk(targetPercent) {
-      if (farmState.feed <= 0) {
-        showDialog('肉乾不足了！新增一筆記帳即可獲得肉乾 🍖');
-        return;
-      }
-
-      if (isMoving) return;
-
-      // 扣除肉乾
-      farmState.feed -= 1;
-      renderFarm();
-
-      // 顯示肉乾
-      const meatItem = document.getElementById('meatItem');
-      meatItem.style.left = `${targetPercent}%`;
-      meatItem.classList.remove('hidden');
-
-      const dino = document.getElementById('dinoContainer');
-      const dinoSprite = document.getElementById('dinoSprite');
-      const currentPercent = farmState.dinoPosPercent || 50;
-
-      // 面向控制
-      if (targetPercent < currentPercent) {
-        dinoSprite.style.transform = 'scaleX(-1)'; // 面向左
-      } else {
-        dinoSprite.style.transform = 'scaleX(1)';  // 面向右
-      }
-
-      showDialog(`${farmState.dinoName} 看到了肉肉，正趕過去！`);
-      isMoving = true;
-
-      // 開始走動
-      setTimeout(() => {
-        dino.style.left = `${targetPercent}%`;
-        farmState.dinoPosPercent = targetPercent;
-      }, 50);
-
-      // 到達肉乾位置（吃肉）
-      setTimeout(() => {
-        meatItem.classList.add('hidden');
-        showDialog(`嗷嗚～ ${farmState.dinoName} 吃掉了肉乾！美味＋1 🍖`);
-        isMoving = false;
-        
-        // 增加些許經驗/等級判斷
-        if (Math.random() > 0.6) {
-          farmState.level += 1;
-          renderFarm();
-          showDialog(`🎉 ${farmState.dinoName} 升到了 Level ${farmState.level}！`);
+    let appData = {
+        records: [],
+        dino: {
+            name: "小綠龍",
+            meats: 0,
+            exp: 0,
+            stage: 0
         }
-      }, 600);
+    };
+
+    let currentRecordType = 'expense';
+    let selectedCategory = 'food';
+    let analyticsChart = null;
+    let currentAnalyticsTab = 'trend';
+
+    window.addEventListener('DOMContentLoaded', () => {
+        loadData();
+        initDefaultDate();
+        renderCategoryGrid();
+        renderRecords();
+        renderDino();
+        renderSummary();
+        initChart();
+        setupDinoRenameEvents();
+    });
+
+    function loadData() {
+        const saved = localStorage.getItem('dino_accounting_data_v2');
+        if (saved) {
+            try { appData = JSON.parse(saved); } catch (e) {}
+        }
     }
 
-    /* --- 恐龍與物件互動 --- */
-    function clickDino(e) {
-      e.stopPropagation();
-      showDialog(`吼～ 我是 ${farmState.dinoName}！點擊草地餵我吃肉肉，雙擊可以幫我改名字喔！`);
+    function saveData() {
+        localStorage.setItem('dino_accounting_data_v2', JSON.stringify(appData));
     }
 
-    function renameDino(e) {
-      e.stopPropagation();
-      const newName = prompt('請輸入小恐龍的新名字：', farmState.dinoName || '雷克斯');
-      if (newName && newName.trim() !== '') {
-        farmState.dinoName = newName.trim();
-        renderFarm();
-        showDialog(`名字成功修改為「${farmState.dinoName}」！吼吼～`);
-      }
+    function initDefaultDate() {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('inputDate').value = today;
     }
 
-    function clickNest(e) {
-      e.stopPropagation();
-      showDialog('火山巢穴：持續記帳即可打造成為壯觀的恐龍王國！');
+    /* 5 Stages Dino System Graphics */
+    const DINO_GRAPHICS = {
+        stage0: `<ellipse cx="16" cy="18" rx="9" ry="11" fill="#fff9c4" stroke="#fbc02d" stroke-width="1.5"/><circle cx="13" cy="15" r="2" fill="#81c784"/><circle cx="19" cy="21" r="2.5" fill="#81c784"/><circle cx="14" cy="22" r="1.5" fill="#81c784"/><path d="M 12 11 Q 16 13 20 11" stroke="#fbc02d" stroke-width="1" fill="none"/>`,
+        stage1: `<rect x="10" y="14" width="12" height="12" rx="3" fill="#66bb6a"/><rect x="12" y="6" width="12" height="10" rx="3" fill="#66bb6a"/><circle cx="19" cy="9" r="1.5" fill="#000"/><circle cx="20" cy="8.5" r="0.5" fill="#fff"/><circle cx="17" cy="12" r="1" fill="#ef9a9a"/><rect x="20" y="11" width="3" height="1.5" fill="#388e3c"/><rect x="11" y="26" width="3" height="4" fill="#388e3c"/><rect x="17" y="26" width="3" height="4" fill="#388e3c"/><path d="M 10 20 L 5 22 L 10 24 Z" fill="#66bb6a"/>`,
+        stage2: `<rect x="9" y="12" width="14" height="13" rx="4" fill="#43a047"/><polygon points="12,5 14,9 10,9" fill="#2e7d32"/><polygon points="8,10 10,14 6,14" fill="#2e7d32"/><rect x="12" y="5" width="14" height="10" rx="3" fill="#43a047"/><circle cx="21" cy="8.5" r="2" fill="#000"/><circle cx="22" cy="8" r="0.7" fill="#fff"/><polygon points="22,12 26,12 24,14" fill="#fff"/><rect x="18" y="16" width="4" height="2" fill="#2e7d32"/><rect x="10" y="25" width="4" height="5" fill="#1b5e20"/><rect x="17" y="25" width="4" height="5" fill="#1b5e20"/><path d="M 9 18 L 3 20 L 9 23 Z" fill="#43a047"/>`,
+        stage3: `<rect x="8" y="11" width="16" height="14" rx="4" fill="#00897b"/><polygon points="26,6 29,10 25,10" fill="#e0f2f1"/><rect x="13" y="4" width="15" height="12" rx="3" fill="#00897b"/><circle cx="22" cy="8" r="2" fill="#000"/><circle cx="23" cy="7.5" r="0.7" fill="#fff"/><path d="M 11 3 Q 14 0 17 3 Q 17 8 13 8 Z" fill="#00695c"/><rect x="9" y="25" width="5" height="5" fill="#004d40"/><rect x="17" y="25" width="5" height="5" fill="#004d40"/><path d="M 8 16 L 2 18 L 8 22 Z" fill="#00897b"/>`,
+        stage4: `<rect x="7" y="10" width="17" height="15" rx="4" fill="#8e24aa"/><rect x="13" y="13" width="9" height="10" rx="2" fill="#e1bee7"/><rect x="12" y="2" width="17" height="12" rx="3" fill="#8e24aa"/><circle cx="23" cy="6" r="2" fill="#fff"/><circle cx="24" cy="6" r="1" fill="#000"/><polygon points="22,12 24,15 20,12" fill="#fff"/><polygon points="26,12 28,15 24,12" fill="#fff"/><rect x="19" y="15" width="5" height="2" fill="#6a1b9a"/><rect x="8" y="25" width="5" height="6" fill="#4a148c"/><rect x="17" y="25" width="5" height="6" fill="#4a148c"/><path d="M 7 15 L 0 17 L 7 21 Z" fill="#8e24aa"/>`,
+        stage5: `<polygon points="6,6 9,11 4,11" fill="#ff3d00"/><polygon points="11,3 14,8 9,8" fill="#ff3d00"/><polygon points="16,2 19,7 14,7" fill="#ff3d00"/><rect x="6" y="9" width="19" height="16" rx="5" fill="#d84315"/><rect x="12" y="12" width="10" height="11" rx="2" fill="#ffcc80"/><rect x="11" y="1" width="19" height="13" rx="4" fill="#e65100"/><circle cx="23" cy="5" r="2.5" fill="#ffeb3b"/><circle cx="24" cy="5" r="1.2" fill="#000"/><polygon points="20,12 22,16 18,12" fill="#fff"/><polygon points="24,12 26,16 22,12" fill="#fff"/><polygon points="28,12 29,15 27,12" fill="#fff"/><rect x="20" y="15" width="6" height="3" fill="#bf360c"/><rect x="7" y="25" width="6" height="6" rx="1" fill="#bf360c"/><rect x="18" y="25" width="6" height="6" rx="1" fill="#bf360c"/><path d="M 6 14 L -2 16 L 6 22 Z" fill="#e65100"/>`
+    };
+
+    const STAGE_CONFIG = [
+        { name: '恐龍蛋', size: 70, maxExp: 30 },
+        { name: 'LV.1 綠色幼龍', size: 75, maxExp: 100 },
+        { name: 'LV.2 青綠迅猛龍', size: 90, maxExp: 100 },
+        { name: 'LV.3 藍綠角龍', size: 105, maxExp: 100 },
+        { name: 'LV.4 紫紅暴龍', size: 120, maxExp: 100 },
+        { name: 'LV.5 橘紅大暴龍 (完全體)', size: 135, maxExp: 100 }
+    ];
+
+    function renderDino() {
+        const svg = document.getElementById('dinoSvg');
+        const d = appData.dino;
+
+        if (d.stage < 0) d.stage = 0;
+        if (d.stage > 5) d.stage = 5;
+
+        const config = STAGE_CONFIG[d.stage];
+
+        document.getElementById('dinoNameDisplay').innerText = d.name;
+        document.getElementById('dinoStageBadge').innerText = config.name;
+
+        svg.style.width = `${config.size}px`;
+        svg.style.height = `${config.size}px`;
+        svg.innerHTML = DINO_GRAPHICS[`stage${d.stage}`];
+
+        if (d.stage === 0) {
+            svg.classList.add('egg-wobble');
+            document.getElementById('expText').innerText = `孵化進度: ${d.exp}/${config.maxExp}`;
+        } else {
+            svg.classList.remove('egg-wobble');
+            if (d.stage === 5) {
+                document.getElementById('expText').innerText = `已達最高等級 MAX`;
+            } else {
+                document.getElementById('expText').innerText = `${d.exp}/${config.maxExp} EXP`;
+            }
+        }
+
+        const pct = d.stage === 5 ? 100 : Math.min(100, Math.round((d.exp / config.maxExp) * 100));
+        document.getElementById('expBar').style.width = `${pct}%`;
+
+        document.getElementById('meatCountText').innerText = d.meats;
+        document.getElementById('feedBtn').disabled = (d.meats <= 0 || d.stage === 5);
     }
 
-    function clickEgg(e) {
-      e.stopPropagation();
-      showDialog(`恐龍蛋：還需要 ${farmState.eggDays} 天就能孵化出新品種小恐龍！`);
+    function feedDino() {
+        const d = appData.dino;
+        if (d.meats <= 0) return;
+
+        d.meats -= 1;
+        d.exp += 10;
+
+        const config = STAGE_CONFIG[d.stage];
+
+        const svg = document.getElementById('dinoSvg');
+        svg.classList.add('bounce');
+        setTimeout(() => svg.classList.remove('bounce'), 500);
+
+        if (d.exp >= config.maxExp && d.stage < 5) {
+            d.stage += 1;
+            d.exp = 0;
+            if (d.stage === 1) {
+                alert(`🎉 恭喜！蛋成功孵化了！獲得【${d.name}】LV.1 綠色幼龍！`);
+            } else {
+                alert(`🌟 太棒了！你的恐龍進化成 【${STAGE_CONFIG[d.stage].name}】！`);
+            }
+        }
+
+        saveData();
+        renderDino();
     }
 
-    function showDialog(msg) {
-      document.getElementById('dialogText').innerText = msg;
-      document.getElementById('dialogBox').classList.remove('hidden');
+    function setupDinoRenameEvents() {
+        document.getElementById('dinoNameContainer').addEventListener('dblclick', openRenameModal);
+        document.getElementById('dinoSvg').addEventListener('dblclick', openRenameModal);
     }
 
-    function closeDialog(e) {
-      if(e) e.stopPropagation();
-      document.getElementById('dialogBox').classList.add('hidden');
+    function openRenameModal() {
+        document.getElementById('renameInput').value = appData.dino.name;
+        document.getElementById('renameModal').classList.add('active');
     }
 
-    /* --- 頁籤與紀錄選單 --- */
-    function switchTab(tab) {
-      document.getElementById('tab-overview').classList.toggle('hidden', tab !== 'overview');
-      document.getElementById('tab-categories').classList.toggle('hidden', tab !== 'categories');
-      
-      document.getElementById('nav-overview').className = tab === 'overview' ? 'flex flex-col items-center gap-1 text-pixelAccent' : 'flex flex-col items-center gap-1 text-gray-400';
-      document.getElementById('nav-categories').className = tab === 'categories' ? 'flex flex-col items-center gap-1 text-pixelAccent' : 'flex flex-col items-center gap-1 text-gray-400';
+    function closeRenameModal() {
+        document.getElementById('renameModal').classList.remove('active');
     }
 
-    function setType(type) {
-      currentType = type;
-      const btnExp = document.getElementById('btnTypeExpense');
-      const btnInc = document.getElementById('btnTypeIncome');
-      if (type === '支出') {
-        btnExp.className = 'text-xs py-1 px-3.5 rounded-lg font-medium transition bg-pixelRed text-white';
-        btnInc.className = 'text-xs py-1 px-3.5 rounded-lg font-medium transition bg-gray-800 text-gray-300';
-      } else {
-        btnInc.className = 'text-xs py-1 px-3.5 rounded-lg font-medium transition bg-pixelAccent text-gray-950';
-        btnExp.className = 'text-xs py-1 px-3.5 rounded-lg font-medium transition bg-gray-800 text-gray-300';
-      }
+    function saveDinoName() {
+        const newName = document.getElementById('renameInput').value.trim();
+        if (newName) {
+            appData.dino.name = newName;
+            saveData();
+            renderDino();
+        }
+        closeRenameModal();
+    }
+
+    function setRecordType(type) {
+        currentRecordType = type;
+        document.getElementById('typeExpenseBtn').className = `type-btn ${type === 'expense' ? 'active expense' : ''}`;
+        document.getElementById('typeIncomeBtn').className = `type-btn ${type === 'income' ? 'active income' : ''}`;
+        renderCategoryGrid();
+    }
+
+    function renderCategoryGrid() {
+        const grid = document.getElementById('categoryGrid');
+        const list = CATEGORIES[currentRecordType];
+        selectedCategory = list[0].id;
+
+        grid.innerHTML = list.map(c => `
+            <div class="cat-chip ${c.id === selectedCategory ? 'selected' : ''}" onclick="selectCategory('${c.id}')">
+                <span style="font-size:20px;">${c.icon}</span>
+                <span>${c.name}</span>
+            </div>
+        `).join('');
+    }
+
+    function selectCategory(catId) {
+        selectedCategory = catId;
+        const chips = document.querySelectorAll('.cat-chip');
+        chips.forEach(chip => {
+            if (chip.getAttribute('onclick').includes(catId)) {
+                chip.classList.add('selected');
+            } else {
+                chip.classList.remove('selected');
+            }
+        });
+    }
+
+    function handleFormSubmit(e) {
+        e.preventDefault();
+        const amount = parseFloat(document.getElementById('inputAmount').value);
+        const date = document.getElementById('inputDate').value;
+        const note = document.getElementById('inputNote').value.trim();
+
+        if (!amount || !date) return;
+
+        const catObj = CATEGORIES[currentRecordType].find(c => c.id === selectedCategory) || { name: '其他', icon: '📝' };
+
+        const newRecord = {
+            id: Date.now(),
+            type: currentRecordType,
+            amount: amount,
+            category: catObj.name,
+            icon: catObj.icon,
+            date: date,
+            note: note
+        };
+
+        appData.records.unshift(newRecord);
+        appData.dino.meats += 1;
+
+        saveData();
+        renderRecords();
+        renderSummary();
+        renderDino();
+        updateChart();
+        closeAddModal();
+
+        document.getElementById('inputAmount').value = '';
+        document.getElementById('inputNote').value = '';
+    }
+
+    function renderSummary() {
+        let inc = 0, exp = 0;
+        appData.records.forEach(r => {
+            if (r.type === 'income') inc += r.amount;
+            else exp += r.amount;
+        });
+
+        document.getElementById('totalIncomeText').innerText = `$ ${inc.toLocaleString()}`;
+        document.getElementById('totalExpenseText').innerText = `$ ${exp.toLocaleString()}`;
     }
 
     function renderRecords() {
-      const listEl = document.getElementById('recordList');
-      listEl.innerHTML = '';
+        const container = document.getElementById('recordList');
+        document.getElementById('recordCountText').innerText = `共 ${appData.records.length} 筆`;
 
-      let totalIn = 0;
-      let totalOut = 0;
-
-      records.forEach((rec) => {
-        if (rec.type === '收入') totalIn += Number(rec.amount);
-        else totalOut += Number(rec.amount);
-
-        const card = document.createElement('div');
-        card.className = 'bg-pixelCard p-3 rounded-lg border border-gray-800 flex items-center justify-between text-xs';
-        
-        card.innerHTML = `
-          <div>
-            <div class="font-medium text-gray-200 text-xs">${rec.category}</div>
-            <div class="text-[10px] text-gray-400 mt-0.5">${rec.date} ${rec.note ? '• ' + rec.note : ''}</div>
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="font-semibold ${rec.type === '收入' ? 'text-pixelAccent' : 'text-pixelRed'}">
-              ${rec.type === '收入' ? '+' : '-'}$${Number(rec.amount).toLocaleString()}
-            </span>
-            <button onclick="deleteRecord(${rec.id})" class="text-gray-500 hover:text-red-400 text-xs px-1">✕</button>
-          </div>
-        `;
-        listEl.appendChild(card);
-      });
-
-      document.getElementById('statIncome').innerText = `$ ${totalIn.toLocaleString()}`;
-      document.getElementById('statExpense').innerText = `$ ${totalOut.toLocaleString()}`;
-      document.getElementById('statBalance').innerText = `$ ${(totalIn - totalOut).toLocaleString()}`;
-    }
-
-    function deleteRecord(id) {
-      records = records.filter(r => r.id !== id);
-      renderAll();
-    }
-
-    function renderBudget() {
-      const totalOut = records.filter(r => r.type === '支出').reduce((sum, r) => sum + Number(r.amount), 0);
-      const limit = budget.amount || 1;
-      const percent = Math.min(Math.round((totalOut / limit) * 100), 100);
-
-      document.getElementById('budgetUsedPercent').innerText = `${percent}%`;
-      document.getElementById('budgetRemaining').innerText = Math.max(0, limit - totalOut).toLocaleString();
-      
-      const bar = document.getElementById('budgetProgressBar');
-      bar.style.width = `${percent}%`;
-      bar.className = percent > 90 ? 'bg-pixelRed h-full transition-all' : 'bg-pixelAccent h-full transition-all';
-    }
-
-    function openBudgetModal() {
-      document.getElementById('budgetAmountInput').value = budget.amount;
-      document.getElementById('budgetModal').classList.remove('hidden');
-    }
-
-    function closeBudgetModal() {
-      document.getElementById('budgetModal').classList.add('hidden');
-    }
-
-    function saveBudget() {
-      budget.amount = Number(document.getElementById('budgetAmountInput').value) || 0;
-      closeBudgetModal();
-      renderAll();
-    }
-
-    function renderCategoryChips() {
-      const container = document.getElementById('categoryChips');
-      container.innerHTML = '';
-      categories.forEach(cat => {
-        const chip = document.createElement('button');
-        const isSelected = cat.name === selectedCategory;
-        chip.type = 'button';
-        chip.className = `px-3 py-1 rounded-lg text-xs font-medium border transition ${isSelected ? 'bg-pixelGold text-gray-950 border-pixelGold' : 'bg-gray-900 text-gray-300 border-gray-700'}`;
-        chip.innerText = cat.name;
-        chip.onclick = () => {
-          selectedCategory = cat.name;
-          renderCategoryChips();
-        };
-        container.appendChild(chip);
-      });
-    }
-
-    function renderCategoryManagement() {
-      const list = document.getElementById('categoryList');
-      list.innerHTML = '';
-      categories.forEach((cat, idx) => {
-        const item = document.createElement('div');
-        item.className = 'py-2.5 flex justify-between items-center text-xs';
-        item.innerHTML = `
-          <span class="text-gray-200 font-medium">${cat.name}</span>
-          <button onclick="deleteCategory(${idx})" class="text-pixelRed hover:underline text-[11px]">刪除</button>
-        `;
-        list.appendChild(item);
-      });
-    }
-
-    function addCustomCategory() {
-      const input = document.getElementById('newCategoryInput');
-      const val = input.value.trim();
-      if (val && !categories.some(c => c.name === val)) {
-        categories.push({ name: val });
-        input.value = '';
-        renderAll();
-      }
-    }
-
-    function deleteCategory(index) {
-      categories.splice(index, 1);
-      renderAll();
-    }
-
-    function renderChart() {
-      const ctx = document.getElementById('categoryChart').getContext('2d');
-      const expRecords = records.filter(r => r.type === '支出');
-      
-      const catMap = {};
-      expRecords.forEach(r => {
-        catMap[r.category] = (catMap[r.category] || 0) + Number(r.amount);
-      });
-
-      const labels = Object.keys(catMap);
-      const data = Object.values(catMap);
-
-      if (chartInstance) chartInstance.destroy();
-
-      chartInstance = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          labels: labels.length ? labels : ['無數據'],
-          datasets: [{
-            data: data.length ? data : [1],
-            backgroundColor: ['#F4A261', '#E63946', '#2A9D8F', '#E9C46A', '#52B788', '#A8DADC'],
-            borderWidth: 0
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { position: 'right', labels: { boxWidth: 8, font: { size: 10 }, color: '#9CA3AF' } }
-          },
-          cutout: '70%'
+        if (appData.records.length === 0) {
+            container.innerHTML = `<div style="text-align:center; padding:20px; color:#aaa; font-size:13px;">尚無記帳紀錄，點擊右下角「+」開始第一筆吧！</div>`;
+            return;
         }
-      });
+
+        container.innerHTML = appData.records.map(r => `
+            <div class="record-item">
+                <div class="record-icon">${r.icon}</div>
+                <div class="record-details">
+                    <span class="record-title">${r.category} ${r.note ? `<span style="font-weight:normal; color:#666;">- ${r.note}</span>` : ''}</span>
+                    <span class="record-sub">${r.date}</span>
+                </div>
+                <span class="record-amount ${r.type === 'income' ? 'amount-income' : 'amount-expense'}">
+                    ${r.type === 'income' ? '+' : '-'}$${r.amount.toLocaleString()}
+                </span>
+            </div>
+        `).join('');
     }
 
-    function openAddModal() {
-      document.getElementById('inputAmount').value = '';
-      document.getElementById('inputNote').value = '';
-      document.getElementById('addModal').classList.remove('hidden');
+    function initChart() {
+        const ctx = document.getElementById('analyticsChart').getContext('2d');
+        analyticsChart = new Chart(ctx, {
+            type: 'line',
+            data: getTrendData(),
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+        updateCategoryRatioList();
     }
 
-    function closeAddModal() {
-      document.getElementById('addModal').classList.add('hidden');
+    function switchAnalyticsTab(tab) {
+        currentAnalyticsTab = tab;
+        const btns = document.querySelectorAll('.tabs-header .tab-btn');
+        btns[0].classList.toggle('active', tab === 'trend');
+        btns[1].classList.toggle('active', tab === 'pie');
+
+        const ratioListContainer = document.getElementById('categoryRatioList');
+
+        if (tab === 'trend') {
+            ratioListContainer.style.display = 'none';
+            analyticsChart.config.type = 'line';
+            analyticsChart.data = getTrendData();
+            analyticsChart.options.scales.y.display = true;
+            analyticsChart.options.scales.x.display = true;
+        } else {
+            ratioListContainer.style.display = 'flex';
+            analyticsChart.config.type = 'doughnut';
+            analyticsChart.data = getPieData();
+            analyticsChart.options.scales.y.display = false;
+            analyticsChart.options.scales.x.display = false;
+        }
+        analyticsChart.update();
+        updateCategoryRatioList();
     }
 
-    function saveRecord() {
-      const amount = Number(document.getElementById('inputAmount').value);
-      if (!amount || amount <= 0) return;
+    function getTrendData() {
+        const dateMap = {};
+        appData.records.filter(r => r.type === 'expense').forEach(r => {
+            dateMap[r.date] = (dateMap[r.date] || 0) + r.amount;
+        });
 
-      records.unshift({
-        id: Date.now(),
-        type: currentType,
-        amount: amount,
-        category: selectedCategory,
-        date: document.getElementById('inputDate').value,
-        note: document.getElementById('inputNote').value
-      });
+        const sortedDates = Object.keys(dateMap).sort().slice(-7);
+        const values = sortedDates.map(d => dateMap[d]);
 
-      // 獎勵肉乾 +1
-      farmState.feed += 1;
-      
-      // 孵化天數倒數扣減
-      if (farmState.eggDays > 0 && Math.random() > 0.5) {
-        farmState.eggDays -= 1;
-      }
-
-      closeAddModal();
-      renderAll();
-      
-      const toast = document.getElementById('farmToast');
-      toast.classList.remove('hidden');
-      setTimeout(() => toast.classList.add('hidden'), 2000);
+        return {
+            labels: sortedDates.length ? sortedDates : ['無資料'],
+            datasets: [{
+                label: '每日支出',
+                data: values.length ? values : [0],
+                borderColor: '#ef6c00',
+                backgroundColor: 'rgba(239, 108, 0, 0.1)',
+                fill: true,
+                tension: 0.35,
+                borderWidth: 2
+            }]
+        };
     }
 
-    function exportCSV() {
-      let csvContent = "data:text/csv;charset=utf-8,\uFEFF日期,類型,類別,金額,備註\n";
-      records.forEach(r => {
-        csvContent += `${r.date},${r.type},${r.category},${r.amount},"${r.note || ''}"\n`;
-      });
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", "dino_accounting_data.csv");
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+    function getPieData() {
+        const catMap = {};
+        appData.records.filter(r => r.type === 'expense').forEach(r => {
+            catMap[r.category] = (catMap[r.category] || 0) + r.amount;
+        });
+
+        const labels = Object.keys(catMap);
+        const data = labels.map(l => catMap[l]);
+        const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#00bcd4'];
+
+        return {
+            labels: labels.length ? labels : ['無資料'],
+            datasets: [{
+                data: data.length ? data : [1],
+                backgroundColor: colors.slice(0, labels.length || 1)
+            }]
+        };
     }
-  </script>
+
+    function updateCategoryRatioList() {
+        const container = document.getElementById('categoryRatioList');
+        if (currentAnalyticsTab !== 'pie') return;
+
+        const catMap = {};
+        let totalExp = 0;
+        appData.records.filter(r => r.type === 'expense').forEach(r => {
+            catMap[r.category] = (catMap[r.category] || 0) + r.amount;
+            totalExp += r.amount;
+        });
+
+        if (totalExp === 0) {
+            container.innerHTML = `<div style="text-align:center; color:#999; padding:10px;">尚未有支出紀錄可計算占比</div>`;
+            return;
+        }
+
+        const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#00bcd4'];
+        let idx = 0;
+
+        container.innerHTML = Object.keys(catMap).map(cat => {
+            const amt = catMap[cat];
+            const pct = ((amt / totalExp) * 100).toFixed(1);
+            const color = colors[idx % colors.length];
+            idx++;
+
+            return `
+                <div class="ratio-item">
+                    <div class="ratio-item-left">
+                        <div class="color-dot" style="background:${color}"></div>
+                        <span style="font-weight:600;">${cat}</span>
+                    </div>
+                    <div>
+                        <span style="font-weight:bold; margin-right:8px;">$${amt.toLocaleString()}</span>
+                        <span style="color:#666;">(${pct}%)</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function updateChart() {
+        if (!analyticsChart) return;
+        if (currentAnalyticsTab === 'trend') analyticsChart.data = getTrendData();
+        else analyticsChart.data = getPieData();
+        analyticsChart.update();
+        updateCategoryRatioList();
+    }
+
+    function switchNav(tab) {
+        const items = document.querySelectorAll('.nav-item');
+        items.forEach(i => i.classList.remove('active'));
+        if (tab === 'records') items[0].classList.add('active');
+        if (tab === 'categories') {
+            items[1].classList.add('active');
+            alert("🏷️ 類別管理功能：可以直接在新增紀錄視窗中點選預設的完整類別！");
+        }
+    }
+
+    function openAddModal() { document.getElementById('addModalOverlay').classList.add('active'); }
+    function closeAddModal() { document.getElementById('addModalOverlay').classList.remove('active'); }
+    function closeAddModalOutside(e) { if (e.target.id === 'addModalOverlay') closeAddModal(); }
+</script>
 </body>
 </html>
