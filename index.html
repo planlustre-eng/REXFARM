@@ -53,6 +53,15 @@
       animation: pixelBounce 0.9s steps(2) infinite;
     }
 
+    @keyframes eggShake {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(-10deg); }
+      75% { transform: rotate(10deg); }
+    }
+    .egg-hatch-anim {
+      animation: eggShake 0.4s ease-in-out infinite;
+    }
+
     #dinoContainer {
       transition: left 0.3s linear, transform 0.2s ease, width 0.3s ease, height 0.3s ease;
     }
@@ -151,14 +160,16 @@
           </div>
         </div>
 
-        <!-- 恐龍 (可移動與體型放大) -->
+        <!-- 恐龍 (可移動與體型放大，可換外觀) -->
         <div id="dinoContainer" 
              onclick="clickDino(event)" 
              ondblclick="renameDino(event)" 
              class="absolute bottom-0 text-center group cursor-pointer z-20 -translate-x-1/2" 
              style="left: 50%;">
           <div id="dinoSprite" class="w-9 h-9 mx-auto relative pixel-dino-anim transition-all duration-300">
-            <svg viewBox="0 0 16 16" class="w-full h-full pixelated">
+            <!-- 像素 SVG 塗裝動態切換 -->
+            <svg id="dinoSvg" viewBox="0 0 16 16" class="w-full h-full pixelated">
+              <!-- 預設綠色雷克斯號 -->
               <path d="M7 2 h5 v2 h-5 z M6 4 h7 v2 h-7 z M5 6 h8 v2 h-8 z M4 8 h9 v4 h-9 z M3 10 h2 v3 h-2 z" fill="#52B788"/>
               <path d="M6 2 h1 v1 h-1 z M5 4 h1 v1 h-1 z M4 6 h1 v1 h-1 z" fill="#1B4332"/>
               <path d="M8 9 h3 v3 h-3 z" fill="#B7E4C7"/>
@@ -172,10 +183,12 @@
           </div>
         </div>
 
-        <!-- 恐龍蛋 -->
-        <div onclick="clickEgg(event)" class="absolute right-3 bottom-0 text-center group cursor-pointer z-10">
-          <div class="text-xl transition-transform group-hover:scale-110">🥚</div>
-          <span class="text-[8px] bg-black/60 backdrop-blur-sm text-white px-1 rounded border border-white/10">孵化中 <strong id="eggDaysLeft" class="text-pixelGold">3</strong>天</span>
+        <!-- 恐龍蛋 (具備即時點擊孵化與倒數機制) -->
+        <div id="eggContainer" onclick="clickEgg(event)" class="absolute right-3 bottom-0 text-center group cursor-pointer z-10">
+          <div id="eggIcon" class="text-xl transition-transform group-hover:scale-110">🥚</div>
+          <span id="eggLabel" class="text-[8px] bg-black/60 backdrop-blur-sm text-white px-1 rounded border border-white/10">
+            孵化中 <strong id="eggDaysLeft" class="text-pixelGold">3</strong>天
+          </span>
         </div>
 
       </div>
@@ -185,7 +198,7 @@
     <!-- 主要內容區 -->
     <main class="flex-1 overflow-y-auto p-3.5 space-y-3.5 no-scrollbar pb-24" id="mainContent">
 
-      <!-- 頁籤一：總覽與明細 -->
+      <!-- 頁籤一：總覽紀錄 (更正錯字) -->
       <section id="tab-overview" class="space-y-3.5">
         
         <!-- 資產數據看板 -->
@@ -224,7 +237,7 @@
           </div>
         </div>
 
-        <!-- 收支類別分析圖表區塊 (升級切換功能) -->
+        <!-- 收支類別分析圖表區塊 -->
         <div class="bg-pixelCard p-3.5 rounded-xl border border-gray-800 space-y-3">
           <div class="flex justify-between items-center">
             <span class="text-xs font-medium text-gray-200">收支結構分析</span>
@@ -280,12 +293,12 @@
 
     </main>
 
-    <!-- 升級放大版底部導覽列 -->
+    <!-- 底部導覽列 (已修正錯字「總覽紀錄」) -->
     <nav class="bg-pixelCard border-t border-gray-800 px-6 py-2.5 flex justify-between items-center absolute bottom-0 w-full z-30 shadow-2xl">
-      <!-- 總攬紀錄（放大可點擊區域） -->
+      <!-- 總覽紀錄按鈕 -->
       <button onclick="switchTab('overview')" id="nav-overview" class="flex-1 flex flex-col items-center justify-center gap-1 py-1 text-pixelAccent transition active:scale-95">
         <span class="text-lg">📜</span>
-        <span class="text-xs font-bold tracking-wider">總攬紀錄</span>
+        <span class="text-xs font-bold tracking-wider">總覽紀錄</span>
       </button>
 
       <!-- 新增紀錄按鈕 -->
@@ -362,6 +375,26 @@
   </div>
 
   <script>
+    // 像素恐龍圖案庫 (可根據孵化解鎖替換)
+    const DINO_SPECIES = [
+      {
+        name: '雷克斯',
+        svg: `<path d="M7 2 h5 v2 h-5 z M6 4 h7 v2 h-7 z M5 6 h8 v2 h-8 z M4 8 h9 v4 h-9 z M3 10 h2 v3 h-2 z" fill="#52B788"/><path d="M6 2 h1 v1 h-1 z M5 4 h1 v1 h-1 z M4 6 h1 v1 h-1 z" fill="#1B4332"/><path d="M8 9 h3 v3 h-3 z" fill="#B7E4C7"/><path d="M10 3 h1 v1 h-1 z" fill="#000"/><path d="M11 8 h2 v1 h-2 z M5 12 h2 v2 h-2 z M9 12 h2 v2 h-2 z" fill="#40916C"/>`
+      },
+      {
+        name: '赤焰龍',
+        svg: `<path d="M7 2 h5 v2 h-5 z M6 4 h7 v2 h-7 z M5 6 h8 v2 h-8 z M4 8 h9 v4 h-9 z M3 10 h2 v3 h-2 z" fill="#E63946"/><path d="M6 2 h1 v1 h-1 z M5 4 h1 v1 h-1 z M4 6 h1 v1 h-1 z" fill="#900C3F"/><path d="M8 9 h3 v3 h-3 z" fill="#F4A261"/><path d="M10 3 h1 v1 h-1 z" fill="#000"/><path d="M11 8 h2 v1 h-2 z M5 12 h2 v2 h-2 z M9 12 h2 v2 h-2 z" fill="#D90429"/>`
+      },
+      {
+        name: '藍翼龍',
+        svg: `<path d="M7 2 h5 v2 h-5 z M6 4 h7 v2 h-7 z M5 6 h8 v2 h-8 z M4 8 h9 v4 h-9 z M3 10 h2 v3 h-2 z" fill="#4EA8DE"/><path d="M6 2 h1 v1 h-1 z M5 4 h1 v1 h-1 z M4 6 h1 v1 h-1 z" fill="#0077B6"/><path d="M8 9 h3 v3 h-3 z" fill="#90E0EF"/><path d="M10 3 h1 v1 h-1 z" fill="#000"/><path d="M11 8 h2 v1 h-2 z M5 12 h2 v2 h-2 z M9 12 h2 v2 h-2 z" fill="#023E8A"/>`
+      },
+      {
+        name: '黃金龍',
+        svg: `<path d="M7 2 h5 v2 h-5 z M6 4 h7 v2 h-7 z M5 6 h8 v2 h-8 z M4 8 h9 v4 h-9 z M3 10 h2 v3 h-2 z" fill="#F4A261"/><path d="M6 2 h1 v1 h-1 z M5 4 h1 v1 h-1 z M4 6 h1 v1 h-1 z" fill="#E76F51"/><path d="M8 9 h3 v3 h-3 z" fill="#FFE6A7"/><path d="M10 3 h1 v1 h-1 z" fill="#000"/><path d="M11 8 h2 v1 h-2 z M5 12 h2 v2 h-2 z M9 12 h2 v2 h-2 z" fill="#D4A373"/>`
+      }
+    ];
+
     let records = JSON.parse(localStorage.getItem('app_records_dino')) || [
       { id: 1, type: '支出', amount: 120, category: '餐飲', date: '2026-09-11', note: '午餐' },
       { id: 2, type: '支出', amount: 55, category: '交通', date: '2026-09-12', note: '捷運' },
@@ -381,7 +414,8 @@
       exp: 20,
       feed: 3, 
       dinoName: '雷克斯',
-      eggDays: 3,
+      speciesIndex: 0,
+      eggDays: 0, // 初始預設可孵化狀態
       dinoPosPercent: 50
     };
 
@@ -417,13 +451,30 @@
     /* --- 恐龍與養殖農場渲染 --- */
     function renderFarm() {
       if (farmState.exp === undefined) farmState.exp = 0;
+      if (farmState.speciesIndex === undefined) farmState.speciesIndex = 0;
       
       document.getElementById('farmLevel').innerText = farmState.level;
       document.getElementById('feedCount').innerText = farmState.feed;
       document.getElementById('dinoNameLabel').innerText = farmState.dinoName || '雷克斯';
-      document.getElementById('eggDaysLeft').innerText = farmState.eggDays !== undefined ? farmState.eggDays : 3;
       
-      // 經驗值
+      // 渲染對應圖案
+      const activeSpecies = DINO_SPECIES[farmState.speciesIndex] || DINO_SPECIES[0];
+      document.getElementById('dinoSvg').innerHTML = activeSpecies.svg;
+
+      // 蛋的狀態渲染 (剩餘天數 <= 0 即代表可立即點擊孵化)
+      const eggDaysLeft = farmState.eggDays !== undefined ? farmState.eggDays : 0;
+      const eggLabel = document.getElementById('eggLabel');
+      const eggIcon = document.getElementById('eggIcon');
+
+      if (eggDaysLeft <= 0) {
+        eggLabel.innerHTML = `<strong class="text-pixelGold font-bold">可孵化！</strong>`;
+        eggIcon.classList.add('egg-hatch-anim');
+      } else {
+        eggLabel.innerHTML = `孵化中 <strong class="text-pixelGold">${eggDaysLeft}</strong>天`;
+        eggIcon.classList.remove('egg-hatch-anim');
+      }
+      
+      // 經驗值計算與渲染
       const maxExp = farmState.level * 100;
       const expPercent = Math.min(100, Math.round((farmState.exp / maxExp) * 100));
       document.getElementById('expProgressBar').style.width = `${expPercent}%`;
@@ -431,7 +482,7 @@
 
       // 體型成長（隨等級變大）
       const dinoSprite = document.getElementById('dinoSprite');
-      const sizePx = 36 + (farmState.level - 1) * 8; // 每升一級大 8px
+      const sizePx = 36 + (farmState.level - 1) * 8;
       dinoSprite.style.width = `${Math.min(sizePx, 68)}px`;
       dinoSprite.style.height = `${Math.min(sizePx, 68)}px`;
 
@@ -441,7 +492,7 @@
 
     /* --- 恐龍移動與餵食邏輯 --- */
     function handleParkClick(e) {
-      if (e.target.closest('#dinoContainer') || e.target.closest('#dialogBox') || e.target.closest('button')) return;
+      if (e.target.closest('#dinoContainer') || e.target.closest('#eggContainer') || e.target.closest('#dialogBox') || e.target.closest('button')) return;
 
       const park = document.getElementById('parkArea');
       const rect = park.getBoundingClientRect();
@@ -529,9 +580,24 @@
       showDialog('火山巢穴：持續記帳養育恐龍，解鎖更多主題！');
     }
 
+    /* 修復：恐龍蛋孵化機制 */
     function clickEgg(e) {
       e.stopPropagation();
-      showDialog(`恐龍蛋：還需要 ${farmState.eggDays} 天就能孵化出新小恐龍！`);
+      if (farmState.eggDays <= 0) {
+        // 隨機孵化新品種
+        const nextIndex = (farmState.speciesIndex + 1) % DINO_SPECIES.length;
+        farmState.speciesIndex = nextIndex;
+        const newSpecies = DINO_SPECIES[nextIndex];
+        farmState.dinoName = newSpecies.name;
+        
+        // 重置倒數天數為 3 天
+        farmState.eggDays = 3;
+        renderFarm();
+
+        showDialog(`✨ 啪嚓！恐龍蛋孵化了！獲得全新恐龍「${newSpecies.name}」！🎉`);
+      } else {
+        showDialog(`恐龍蛋：還需要持續記帳 ${farmState.eggDays} 天，就能孵化出新恐龍！`);
+      }
     }
 
     function showDialog(msg) {
@@ -735,14 +801,13 @@
       // 2. 近期每日金額波動長條圖
       const trendCtx = document.getElementById('trendChart').getContext('2d');
       
-      // 按日期排序與分組
       const dateMap = {};
       filteredRecords.slice().reverse().forEach(r => {
-        const shortDate = r.date.slice(5); // 取 MM-DD
+        const shortDate = r.date.slice(5);
         dateMap[shortDate] = (dateMap[shortDate] || 0) + Number(r.amount);
       });
 
-      const trendLabels = Object.keys(dateMap).slice(-7); // 取最近7天
+      const trendLabels = Object.keys(dateMap).slice(-7);
       const trendData = trendLabels.map(k => dateMap[k]);
 
       if (trendChartInstance) trendChartInstance.destroy();
@@ -796,7 +861,8 @@
 
       farmState.feed += 1;
       
-      if (farmState.eggDays > 0 && Math.random() > 0.4) {
+      // 每次記帳孵化倒數天數 -1 (直至 0 天)
+      if (farmState.eggDays > 0) {
         farmState.eggDays -= 1;
       }
 
@@ -806,6 +872,11 @@
       const toast = document.getElementById('farmToast');
       toast.classList.remove('hidden');
       setTimeout(() => toast.classList.add('hidden'), 2000);
+
+      // 若剛剛剛好扣至 0 天，給予提示
+      if (farmState.eggDays === 0) {
+        showDialog('🥚 恐龍蛋已經可以孵化了！快點擊右上角的蛋孵化新恐龍！');
+      }
     }
 
     function exportCSV() {
