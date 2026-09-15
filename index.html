@@ -53,9 +53,8 @@
       animation: pixelBounce 0.9s steps(2) infinite;
     }
 
-    /* 恐龍行走動畫 */
     #dinoContainer {
-      transition: left 0.3s linear, transform 0.2s ease;
+      transition: left 0.3s linear, transform 0.2s ease, width 0.3s ease, height 0.3s ease;
     }
   </style>
 </head>
@@ -68,35 +67,31 @@
     <header class="bg-pixelCard px-4 py-2.5 flex justify-between items-center border-b border-gray-800 z-10 flex-shrink-0">
       <div class="flex items-center gap-2">
         <span class="pixel-font text-[10px] text-pixelAccent tracking-widest">DINO PARK</span>
-        <span class="text-[10px] bg-gray-800 text-pixelGold px-2 py-0.5 rounded border border-gray-700">等級 <span id="farmLevel">1</span></span>
+        <span class="text-[10px] bg-gray-800 text-pixelGold px-2 py-0.5 rounded border border-gray-700">Lv. <span id="farmLevel">1</span></span>
       </div>
       <div class="text-[11px] flex items-center gap-2">
-        <button onclick="spawnMeatFromHeader()" class="text-gray-300 hover:text-white bg-gray-800/80 px-2 py-0.5 rounded border border-gray-700">
+        <button onclick="spawnMeatFromHeader()" class="text-gray-300 hover:text-white bg-gray-800/80 px-2.5 py-1 rounded border border-gray-700 flex items-center gap-1 active:scale-95 transition">
           🍖 肉乾 <strong id="feedCount" class="text-pixelGold">3</strong>
         </button>
-        <button onclick="exportCSV()" class="bg-gray-800 hover:bg-gray-700 text-pixelText border border-gray-600 text-[10px] py-0.5 px-2.5 rounded transition">匯出資料</button>
+        <button onclick="exportCSV()" class="bg-gray-800 hover:bg-gray-700 text-pixelText border border-gray-600 text-[10px] py-1 px-2.5 rounded transition">匯出</button>
       </div>
     </header>
 
-    <!-- 藍天綠地像素恐龍公園橫幅 (140px) -->
-    <div id="parkArea" onclick="handleParkClick(event)" class="border-b-2 border-gray-800 relative overflow-hidden flex-shrink-0 h-[140px] flex flex-col justify-between pixelated select-none cursor-pointer">
+    <!-- 藍天綠地像素恐龍公園橫幅 -->
+    <div id="parkArea" onclick="handleParkClick(event)" class="border-b-2 border-gray-800 relative overflow-hidden flex-shrink-0 h-[155px] flex flex-col justify-between pixelated select-none cursor-pointer">
       
       <!-- 天空背景 -->
       <div class="absolute inset-0 bg-[#70C5CE] z-0"></div>
 
       <!-- 像素白雲 -->
       <div class="absolute top-2 left-4 w-12 h-4 opacity-80 z-0">
-        <svg viewBox="0 0 24 8" class="w-full h-full pixelated">
-          <path d="M4 2 h16 v2 h-16 z M2 4 h20 v2 h-20 z" fill="#FFFFFF"/>
-        </svg>
+        <svg viewBox="0 0 24 8" class="w-full h-full pixelated"><path d="M4 2 h16 v2 h-16 z M2 4 h20 v2 h-20 z" fill="#FFFFFF"/></svg>
       </div>
       <div class="absolute top-4 right-8 w-16 h-5 opacity-70 z-0">
-        <svg viewBox="0 0 24 8" class="w-full h-full pixelated">
-          <path d="M4 2 h16 v2 h-16 z M2 4 h20 v2 h-20 z" fill="#FFFFFF"/>
-        </svg>
+        <svg viewBox="0 0 24 8" class="w-full h-full pixelated"><path d="M4 2 h16 v2 h-16 z M2 4 h20 v2 h-20 z" fill="#FFFFFF"/></svg>
       </div>
 
-      <!-- 遠處遠山 -->
+      <!-- 遠山 -->
       <div class="absolute bottom-6 left-0 right-0 h-10 z-0">
         <svg viewBox="0 0 100 25" preserveAspectRatio="none" class="w-full h-full pixelated">
           <polygon points="0,25 15,8 35,25" fill="#2D6A4F" />
@@ -110,40 +105,45 @@
         <div class="w-full h-1 bg-[#74C69D]"></div>
       </div>
 
-      <!-- 頂部資訊條：半透明連續記帳 + 半透明恐龍互動對話框 -->
-      <div class="flex items-center gap-1.5 p-2 z-10 relative">
-        <div class="text-[10px] bg-black/50 backdrop-blur-sm text-white px-2 py-1 rounded border border-white/10 shrink-0">
-          連續 3 天
-        </div>
+      <!-- 頂部資訊列：經驗條與對話框 -->
+      <div class="p-2 z-10 relative space-y-1">
+        <div class="flex items-center gap-1.5">
+          <!-- 經驗值進度條 -->
+          <div class="bg-black/60 backdrop-blur-sm text-white px-2 py-0.5 rounded border border-white/10 text-[9px] flex items-center gap-1.5 shrink-0">
+            <span class="text-pixelGold font-bold">EXP</span>
+            <div class="w-16 bg-gray-800 h-1.5 rounded-full overflow-hidden border border-gray-600">
+              <div id="expProgressBar" class="bg-pixelGold h-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+            <span id="expText" class="text-[8px] text-gray-300">0/100</span>
+          </div>
 
-        <!-- 半透明互動對話框 -->
-        <div id="dialogBox" class="flex-1 bg-black/50 backdrop-blur-sm border border-white/10 rounded px-2 py-1 text-[10px] text-white flex justify-between items-center overflow-hidden">
-          <span id="dialogText" class="truncate">點擊草地放置肉乾餵食恐龍（雙擊改名）</span>
-          <button onclick="closeDialog(event)" class="text-gray-400 hover:text-white ml-1 shrink-0">✕</button>
-        </div>
+          <!-- 對話框 -->
+          <div id="dialogBox" class="flex-1 bg-black/60 backdrop-blur-sm border border-white/10 rounded px-2 py-0.5 text-[10px] text-white flex justify-between items-center overflow-hidden">
+            <span id="dialogText" class="truncate">點擊草地餵肉乾，或點擊恐龍互動！</span>
+            <button onclick="closeDialog(event)" class="text-gray-400 hover:text-white ml-1 shrink-0">✕</button>
+          </div>
 
-        <!-- 獎勵提示 -->
-        <div id="farmToast" class="hidden bg-pixelGold text-black text-[10px] px-2 py-1 font-bold border border-black shadow shrink-0">
-          肉乾 +1
+          <!-- 獎勵提示 -->
+          <div id="farmToast" class="hidden bg-pixelGold text-black text-[10px] px-2 py-0.5 font-bold border border-black shadow shrink-0">
+            肉乾 +1
+          </div>
         </div>
       </div>
 
-      <!-- 恐龍與物件區域 (絕對定位以支援行走) -->
-      <div class="relative w-full h-16 z-10 mb-1">
+      <!-- 恐龍與物件區域 -->
+      <div class="relative w-full h-20 z-10 mb-1">
         
-        <!-- 恐龍巢穴 (固定左側) -->
-        <div onclick="clickNest(event)" class="absolute left-4 bottom-0 text-center group cursor-pointer z-10">
-          <div class="text-xl transition-transform group-hover:scale-105">🌋</div>
-          <span class="text-[8px] bg-black/50 backdrop-blur-sm text-white px-1 py-0.2 rounded border border-white/10">巢穴</span>
+        <!-- 巢穴 -->
+        <div onclick="clickNest(event)" class="absolute left-3 bottom-0 text-center group cursor-pointer z-10">
+          <div class="text-xl transition-transform group-hover:scale-110">🌋</div>
+          <span class="text-[8px] bg-black/60 backdrop-blur-sm text-white px-1 rounded border border-white/10">巢穴</span>
         </div>
 
-        <!-- 帶骨頭的肉乾 (動態放置) -->
+        <!-- 肉乾 -->
         <div id="meatItem" class="hidden absolute bottom-2 z-10 -translate-x-1/2 transition-all duration-300">
           <div class="w-5 h-5">
             <svg viewBox="0 0 16 16" class="w-full h-full pixelated">
-              <!-- 骨頭兩端 -->
               <path d="M1 7 h2 v2 h-2 z M13 7 h2 v2 h-2 z" fill="#FFFFFF"/>
-              <!-- 肉身 -->
               <path d="M3 5 h10 v6 h-10 z" fill="#E63946"/>
               <path d="M5 6 h6 v4 h-6 z" fill="#C5221F"/>
               <path d="M4 8 h2 v2 h-2 z" fill="#F4A261"/>
@@ -151,33 +151,31 @@
           </div>
         </div>
 
-        <!-- 8-bit 像素小恐龍 (可移動) -->
+        <!-- 恐龍 (可移動與體型放大) -->
         <div id="dinoContainer" 
              onclick="clickDino(event)" 
              ondblclick="renameDino(event)" 
              class="absolute bottom-0 text-center group cursor-pointer z-20 -translate-x-1/2" 
              style="left: 50%;">
-          <div id="dinoSprite" class="w-9 h-9 mx-auto relative pixel-dino-anim">
+          <div id="dinoSprite" class="w-9 h-9 mx-auto relative pixel-dino-anim transition-all duration-300">
             <svg viewBox="0 0 16 16" class="w-full h-full pixelated">
-              <!-- 恐龍身體 (綠) -->
               <path d="M7 2 h5 v2 h-5 z M6 4 h7 v2 h-7 z M5 6 h8 v2 h-8 z M4 8 h9 v4 h-9 z M3 10 h2 v3 h-2 z" fill="#52B788"/>
-              <!-- 背脊 (深綠) -->
               <path d="M6 2 h1 v1 h-1 z M5 4 h1 v1 h-1 z M4 6 h1 v1 h-1 z" fill="#1B4332"/>
-              <!-- 肚皮 (淺綠/黃) -->
               <path d="M8 9 h3 v3 h-3 z" fill="#B7E4C7"/>
-              <!-- 眼睛 (黑) -->
               <path d="M10 3 h1 v1 h-1 z" fill="#000"/>
-              <!-- 手腳 (綠/橘) -->
               <path d="M11 8 h2 v1 h-2 z M5 12 h2 v2 h-2 z M9 12 h2 v2 h-2 z" fill="#40916C"/>
             </svg>
           </div>
-          <span id="dinoNameLabel" class="text-[8px] bg-black/50 backdrop-blur-sm text-pixelGold px-1 py-0.2 rounded border border-pixelGold/30">雷克斯</span>
+          <div class="flex items-center justify-center gap-0.5">
+            <span id="dinoNameLabel" class="text-[9px] bg-black/60 backdrop-blur-sm text-pixelGold px-1.5 py-0.2 rounded border border-pixelGold/40 font-medium">雷克斯</span>
+            <button onclick="renameDino(event)" class="text-[9px] bg-black/60 text-gray-300 hover:text-white px-1 rounded border border-white/20">✏️</button>
+          </div>
         </div>
 
-        <!-- 恐龍蛋 (固定右側，顯示孵化剩餘天數) -->
-        <div onclick="clickEgg(event)" class="absolute right-4 bottom-0 text-center group cursor-pointer z-10">
-          <div class="text-xl transition-transform group-hover:scale-105">🥚</div>
-          <span class="text-[8px] bg-black/50 backdrop-blur-sm text-white px-1 py-0.2 rounded border border-white/10">孵化中 <strong id="eggDaysLeft" class="text-pixelGold">3</strong>天</span>
+        <!-- 恐龍蛋 -->
+        <div onclick="clickEgg(event)" class="absolute right-3 bottom-0 text-center group cursor-pointer z-10">
+          <div class="text-xl transition-transform group-hover:scale-110">🥚</div>
+          <span class="text-[8px] bg-black/60 backdrop-blur-sm text-white px-1 rounded border border-white/10">孵化中 <strong id="eggDaysLeft" class="text-pixelGold">3</strong>天</span>
         </div>
 
       </div>
@@ -185,7 +183,7 @@
     </div>
 
     <!-- 主要內容區 -->
-    <main class="flex-1 overflow-y-auto p-3.5 space-y-3.5 no-scrollbar pb-20" id="mainContent">
+    <main class="flex-1 overflow-y-auto p-3.5 space-y-3.5 no-scrollbar pb-24" id="mainContent">
 
       <!-- 頁籤一：總覽與明細 -->
       <section id="tab-overview" class="space-y-3.5">
@@ -226,21 +224,37 @@
           </div>
         </div>
 
-        <!-- 支出類別占比圓餅圖 -->
-        <div class="bg-pixelCard p-3.5 rounded-xl border border-gray-800">
-          <div class="text-xs font-medium text-gray-200 mb-2">支出結構分析</div>
+        <!-- 收支類別分析圖表區塊 (升級切換功能) -->
+        <div class="bg-pixelCard p-3.5 rounded-xl border border-gray-800 space-y-3">
+          <div class="flex justify-between items-center">
+            <span class="text-xs font-medium text-gray-200">收支結構分析</span>
+            <div class="flex bg-gray-900 p-0.5 rounded-lg border border-gray-700 text-[10px]">
+              <button id="btnChartExpense" onclick="switchChartType('支出')" class="px-2 py-0.5 rounded-md bg-pixelRed text-white font-medium transition">支出</button>
+              <button id="btnChartIncome" onclick="switchChartType('收入')" class="px-2 py-0.5 rounded-md text-gray-400 hover:text-white transition">收入</button>
+            </div>
+          </div>
+
+          <!-- 圓餅圖 -->
           <div class="h-36 relative flex justify-center items-center">
             <canvas id="categoryChart"></canvas>
           </div>
+
+          <!-- 近期每日支出趨勢長條圖 -->
+          <div class="pt-2 border-t border-gray-800/80">
+            <div class="text-[10px] text-gray-400 mb-1.5">近期每日金額波動</div>
+            <div class="h-28 relative">
+              <canvas id="trendChart"></canvas>
+            </div>
+          </div>
         </div>
 
-        <!-- 動態歷程紀錄 -->
+        <!-- 交易紀錄列表 -->
         <div class="space-y-2">
           <div class="flex justify-between items-center px-0.5">
             <span class="text-xs font-medium text-gray-400">近期交易紀錄</span>
           </div>
           <div id="recordList" class="space-y-2">
-            <!-- 動態渲染紀錄 -->
+            <!-- 動態渲染 -->
           </div>
         </div>
 
@@ -266,66 +280,66 @@
 
     </main>
 
-    <!-- 底部導覽列 -->
-    <nav class="bg-pixelCard border-t border-gray-800 px-8 py-2 flex justify-around items-center absolute bottom-0 w-full z-10">
-      <button onclick="switchTab('overview')" id="nav-overview" class="flex flex-col items-center gap-1 text-pixelAccent">
-        <span class="text-xs font-medium">總覽紀錄</span>
+    <!-- 升級放大版底部導覽列 -->
+    <nav class="bg-pixelCard border-t border-gray-800 px-6 py-2.5 flex justify-between items-center absolute bottom-0 w-full z-30 shadow-2xl">
+      <!-- 總攬紀錄（放大可點擊區域） -->
+      <button onclick="switchTab('overview')" id="nav-overview" class="flex-1 flex flex-col items-center justify-center gap-1 py-1 text-pixelAccent transition active:scale-95">
+        <span class="text-lg">📜</span>
+        <span class="text-xs font-bold tracking-wider">總攬紀錄</span>
       </button>
 
       <!-- 新增紀錄按鈕 -->
-      <button onclick="openAddModal()" class="bg-pixelGold hover:bg-amber-600 text-gray-950 text-xl font-bold w-10 h-10 rounded-full flex items-center justify-center -mt-5 border-2 border-pixelBg shadow-lg transition active:scale-95">
+      <button onclick="openAddModal()" class="bg-pixelGold hover:bg-amber-600 text-gray-950 text-2xl font-bold w-12 h-12 rounded-full flex items-center justify-center -mt-6 border-4 border-pixelBg shadow-xl transition active:scale-95 shrink-0 mx-2">
         ＋
       </button>
 
-      <button onclick="switchTab('categories')" id="nav-categories" class="flex flex-col items-center gap-1 text-gray-400">
-        <span class="text-xs font-medium">類別管理</span>
+      <!-- 類別管理 -->
+      <button onclick="switchTab('categories')" id="nav-categories" class="flex-1 flex flex-col items-center justify-center gap-1 py-1 text-gray-400 transition active:scale-95">
+        <span class="text-lg">🏷️</span>
+        <span class="text-xs font-bold tracking-wider">類別管理</span>
       </button>
     </nav>
 
     <!-- 新增紀錄 Modal -->
     <div id="addModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-end flex-col z-50 hidden">
-      <div class="bg-pixelCard rounded-t-2xl p-3.5 space-y-3 border-t border-gray-700 max-w-md mx-auto w-full">
+      <div class="bg-pixelCard rounded-t-2xl p-4 space-y-3 border-t border-gray-700 max-w-md mx-auto w-full">
         
-        <div class="flex justify-between items-center border-b border-gray-800 pb-1.5">
+        <div class="flex justify-between items-center border-b border-gray-800 pb-2">
           <div class="flex gap-2">
-            <button id="btnTypeExpense" onclick="setType('支出')" class="text-xs py-1 px-3.5 rounded-lg font-medium transition bg-pixelRed text-white">支出</button>
-            <button id="btnTypeIncome" onclick="setType('收入')" class="text-xs py-1 px-3.5 rounded-lg font-medium transition bg-gray-800 text-gray-300">收入</button>
+            <button id="btnTypeExpense" onclick="setType('支出')" class="text-xs py-1 px-4 rounded-lg font-medium transition bg-pixelRed text-white">支出</button>
+            <button id="btnTypeIncome" onclick="setType('收入')" class="text-xs py-1 px-4 rounded-lg font-medium transition bg-gray-800 text-gray-300">收入</button>
           </div>
           <button onclick="closeAddModal()" class="text-gray-400 hover:text-white text-base px-1">✕</button>
         </div>
 
-        <div class="space-y-2.5">
-          <!-- 金額輸入 -->
+        <div class="space-y-3">
           <div>
-            <label class="text-[10px] text-gray-400 block mb-0.5">交易金額</label>
-            <div class="bg-gray-900 border border-gray-700 rounded-lg px-2.5 py-1.5 flex items-center">
+            <label class="text-[10px] text-gray-400 block mb-1">金額</label>
+            <div class="bg-gray-900 border border-gray-700 rounded-lg px-3 py-1.5 flex items-center">
               <span class="text-gray-400 mr-2 text-xs">$</span>
-              <input type="number" id="inputAmount" inputmode="numeric" pattern="[0-9]*" placeholder="0" class="bg-transparent w-full text-base font-bold text-pixelGold outline-none" />
+              <input type="number" id="inputAmount" inputmode="numeric" pattern="[0-9]*" placeholder="0" class="bg-transparent w-full text-lg font-bold text-pixelGold outline-none" />
             </div>
           </div>
 
-          <!-- 類別選擇 -->
           <div>
-            <label class="text-[10px] text-gray-400 block mb-0.5">交易類別</label>
-            <div id="categoryChips" class="flex gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
-              <!-- 動態生成純文字類別標籤 -->
-            </div>
+            <label class="text-[10px] text-gray-400 block mb-1">類別</label>
+            <div id="categoryChips" class="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar"></div>
           </div>
 
           <div class="grid grid-cols-2 gap-2">
             <div>
               <label class="text-[10px] text-gray-400 block mb-0.5">日期</label>
-              <input type="date" id="inputDate" class="w-full bg-gray-900 text-xs p-1.5 text-white border border-gray-700 rounded-lg outline-none" />
+              <input type="date" id="inputDate" class="w-full bg-gray-900 text-xs p-2 text-white border border-gray-700 rounded-lg outline-none" />
             </div>
             <div>
-              <label class="text-[10px] text-gray-400 block mb-0.5">備註說明</label>
-              <input type="text" id="inputNote" placeholder="細節..." class="w-full bg-gray-900 text-xs p-1.5 text-white border border-gray-700 rounded-lg outline-none" />
+              <label class="text-[10px] text-gray-400 block mb-0.5">備註</label>
+              <input type="text" id="inputNote" placeholder="細節..." class="w-full bg-gray-900 text-xs p-2 text-white border border-gray-700 rounded-lg outline-none" />
             </div>
           </div>
         </div>
 
-        <button onclick="saveRecord()" class="w-full bg-pixelAccent hover:bg-emerald-600 text-gray-950 font-bold text-xs py-2 rounded-lg transition mt-1">
-          完成紀錄（餵養恐龍 肉乾 +1）
+        <button onclick="saveRecord()" class="w-full bg-pixelAccent hover:bg-emerald-600 text-gray-950 font-bold text-xs py-2.5 rounded-lg transition mt-2">
+          完成紀錄（獲得肉乾 🍖 +1）
         </button>
       </div>
     </div>
@@ -334,12 +348,10 @@
     <div id="budgetModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm flex justify-center items-center p-4 z-50 hidden">
       <div class="bg-pixelCard rounded-xl p-4 w-full max-w-xs space-y-3.5 border border-gray-700">
         <h3 class="font-medium text-xs text-gray-200 border-b border-gray-800 pb-2">調整財務配額</h3>
-        
         <div>
           <label class="text-[10px] text-gray-400 block mb-1">月度預算上限</label>
           <input type="number" id="budgetAmountInput" inputmode="numeric" pattern="[0-9]*" placeholder="例如：20000" class="w-full bg-gray-900 text-xs p-2.5 text-white border border-gray-700 rounded-lg outline-none" />
         </div>
-
         <div class="flex gap-2 pt-1">
           <button onclick="closeBudgetModal()" class="flex-1 bg-gray-800 text-gray-300 py-1.5 text-xs rounded-lg">取消</button>
           <button onclick="saveBudget()" class="flex-1 bg-pixelAccent text-gray-950 font-medium py-1.5 text-xs rounded-lg">儲存設定</button>
@@ -352,22 +364,21 @@
   <script>
     let records = JSON.parse(localStorage.getItem('app_records_dino')) || [
       { id: 1, type: '支出', amount: 120, category: '餐飲', date: '2026-09-11', note: '午餐' },
-      { id: 2, type: '支出', amount: 55, category: '交通', date: '2026-09-11', note: '捷運' },
-      { id: 3, type: '收入', amount: 50000, category: '薪資', date: '2026-09-01', note: '月薪入帳' }
+      { id: 2, type: '支出', amount: 55, category: '交通', date: '2026-09-12', note: '捷運' },
+      { id: 3, type: '收入', amount: 50000, category: '薪資', date: '2026-09-01', note: '月薪入帳' },
+      { id: 4, type: '支出', amount: 350, category: '購物', date: '2026-09-14', note: '日用品' }
     ];
 
     let categories = JSON.parse(localStorage.getItem('app_categories_dino')) || [
-      { name: '餐飲' },
-      { name: '交通' },
-      { name: '購物' },
-      { name: '居住' },
-      { name: '娛樂' },
-      { name: '薪資' }
+      { name: '餐飲' }, { name: '交通' }, { name: '購物' },
+      { name: '居住' }, { name: '娛樂' }, { name: '薪資' }
     ];
 
     let budget = JSON.parse(localStorage.getItem('app_budget_dino')) || { amount: 20000 };
+    
     let farmState = JSON.parse(localStorage.getItem('app_farm_dino')) || { 
       level: 1, 
+      exp: 20,
       feed: 3, 
       dinoName: '雷克斯',
       eggDays: 3,
@@ -375,8 +386,10 @@
     };
 
     let currentType = '支出';
+    let currentChartType = '支出';
     let selectedCategory = '餐飲';
-    let chartInstance = null;
+    let pieChartInstance = null;
+    let trendChartInstance = null;
     let isMoving = false;
 
     window.onload = () => {
@@ -396,22 +409,37 @@
       renderBudget();
       renderCategoryChips();
       renderCategoryManagement();
-      renderChart();
+      renderCharts();
       renderFarm();
       saveToStorage();
     }
 
+    /* --- 恐龍與養殖農場渲染 --- */
     function renderFarm() {
+      if (farmState.exp === undefined) farmState.exp = 0;
+      
       document.getElementById('farmLevel').innerText = farmState.level;
       document.getElementById('feedCount').innerText = farmState.feed;
       document.getElementById('dinoNameLabel').innerText = farmState.dinoName || '雷克斯';
       document.getElementById('eggDaysLeft').innerText = farmState.eggDays !== undefined ? farmState.eggDays : 3;
       
+      // 經驗值
+      const maxExp = farmState.level * 100;
+      const expPercent = Math.min(100, Math.round((farmState.exp / maxExp) * 100));
+      document.getElementById('expProgressBar').style.width = `${expPercent}%`;
+      document.getElementById('expText').innerText = `${farmState.exp}/${maxExp}`;
+
+      // 體型成長（隨等級變大）
+      const dinoSprite = document.getElementById('dinoSprite');
+      const sizePx = 36 + (farmState.level - 1) * 8; // 每升一級大 8px
+      dinoSprite.style.width = `${Math.min(sizePx, 68)}px`;
+      dinoSprite.style.height = `${Math.min(sizePx, 68)}px`;
+
       const dino = document.getElementById('dinoContainer');
       dino.style.left = `${farmState.dinoPosPercent || 50}%`;
     }
 
-    /* --- 恐龍餵養與動態行走邏輯 --- */
+    /* --- 恐龍移動與餵食邏輯 --- */
     function handleParkClick(e) {
       if (e.target.closest('#dinoContainer') || e.target.closest('#dialogBox') || e.target.closest('button')) return;
 
@@ -431,7 +459,7 @@
 
     function dropMeatAndWalk(targetPercent) {
       if (farmState.feed <= 0) {
-        showDialog('肉乾不足了！新增一筆記帳即可獲得肉乾 🍖');
+        showDialog('肉乾不夠了！新增一筆記帳即可獲得肉乾 🍖');
         return;
       }
 
@@ -448,13 +476,9 @@
       const dinoSprite = document.getElementById('dinoSprite');
       const currentPercent = farmState.dinoPosPercent || 50;
 
-      if (targetPercent < currentPercent) {
-        dinoSprite.style.transform = 'scaleX(-1)';
-      } else {
-        dinoSprite.style.transform = 'scaleX(1)';
-      }
+      dinoSprite.style.transform = targetPercent < currentPercent ? 'scaleX(-1)' : 'scaleX(1)';
 
-      showDialog(`${farmState.dinoName} 看到了肉肉，正趕過去！`);
+      showDialog(`${farmState.dinoName} 看到了肉肉，正在奔跑過去！`);
       isMoving = true;
 
       setTimeout(() => {
@@ -464,41 +488,50 @@
 
       setTimeout(() => {
         meatItem.classList.add('hidden');
-        showDialog(`嗷嗚～ ${farmState.dinoName} 吃掉了肉乾！美味＋1 🍖`);
-        isMoving = false;
         
-        if (Math.random() > 0.6) {
+        // 增加經驗值
+        const gainedExp = 35;
+        farmState.exp += gainedExp;
+        const maxExp = farmState.level * 100;
+
+        if (farmState.exp >= maxExp) {
           farmState.level += 1;
-          renderFarm();
-          showDialog(`🎉 ${farmState.dinoName} 升到了 Level ${farmState.level}！`);
+          farmState.exp -= maxExp;
+          showDialog(`🎉 🎉 ${farmState.dinoName} 升到了 Lv.${farmState.level}！體型變大了！`);
+        } else {
+          showDialog(`嗷嗚～ ${farmState.dinoName} 吃掉了肉乾！EXP +${gainedExp} 🍖`);
         }
+
+        isMoving = false;
+        renderFarm();
       }, 600);
     }
 
-    /* --- 恐龍與物件互動 --- */
+    /* --- 恐龍與互動機制 --- */
     function clickDino(e) {
       e.stopPropagation();
-      showDialog(`吼～ 我是 ${farmState.dinoName}！點擊草地餵我吃肉肉，雙擊可以幫我改名字喔！`);
+      showDialog(`吼～ 我是 ${farmState.dinoName} (Lv.${farmState.level})！點擊草地餵我吃肉肉！`);
     }
 
     function renameDino(e) {
-      e.stopPropagation();
-      const newName = prompt('請輸入小恐龍的新名字：', farmState.dinoName || '雷克斯');
+      if (e) e.stopPropagation();
+      const current = farmState.dinoName || '雷克斯';
+      const newName = prompt('請輸入小恐龍的新名字：', current);
       if (newName && newName.trim() !== '') {
         farmState.dinoName = newName.trim();
         renderFarm();
-        showDialog(`名字成功修改為「${farmState.dinoName}」！吼吼～`);
+        showDialog(`成功改名為「${farmState.dinoName}」！吼吼～`);
       }
     }
 
     function clickNest(e) {
       e.stopPropagation();
-      showDialog('火山巢穴：持續記帳即可打造成為壯觀的恐龍王國！');
+      showDialog('火山巢穴：持續記帳養育恐龍，解鎖更多主題！');
     }
 
     function clickEgg(e) {
       e.stopPropagation();
-      showDialog(`恐龍蛋：還需要 ${farmState.eggDays} 天就能孵化出新品種小恐龍！`);
+      showDialog(`恐龍蛋：還需要 ${farmState.eggDays} 天就能孵化出新小恐龍！`);
     }
 
     function showDialog(msg) {
@@ -511,13 +544,13 @@
       document.getElementById('dialogBox').classList.add('hidden');
     }
 
-    /* --- 頁籤與紀錄選單 --- */
+    /* --- 頁籤與介面控制 --- */
     function switchTab(tab) {
       document.getElementById('tab-overview').classList.toggle('hidden', tab !== 'overview');
       document.getElementById('tab-categories').classList.toggle('hidden', tab !== 'categories');
       
-      document.getElementById('nav-overview').className = tab === 'overview' ? 'flex flex-col items-center gap-1 text-pixelAccent' : 'flex flex-col items-center gap-1 text-gray-400';
-      document.getElementById('nav-categories').className = tab === 'categories' ? 'flex flex-col items-center gap-1 text-pixelAccent' : 'flex flex-col items-center gap-1 text-gray-400';
+      document.getElementById('nav-overview').className = tab === 'overview' ? 'flex-1 flex flex-col items-center justify-center gap-1 py-1 text-pixelAccent transition active:scale-95' : 'flex-1 flex flex-col items-center justify-center gap-1 py-1 text-gray-400 transition active:scale-95';
+      document.getElementById('nav-categories').className = tab === 'categories' ? 'flex-1 flex flex-col items-center justify-center gap-1 py-1 text-pixelAccent transition active:scale-95' : 'flex-1 flex flex-col items-center justify-center gap-1 py-1 text-gray-400 transition active:scale-95';
     }
 
     function setType(type) {
@@ -525,11 +558,11 @@
       const btnExp = document.getElementById('btnTypeExpense');
       const btnInc = document.getElementById('btnTypeIncome');
       if (type === '支出') {
-        btnExp.className = 'text-xs py-1 px-3.5 rounded-lg font-medium transition bg-pixelRed text-white';
-        btnInc.className = 'text-xs py-1 px-3.5 rounded-lg font-medium transition bg-gray-800 text-gray-300';
+        btnExp.className = 'text-xs py-1 px-4 rounded-lg font-medium transition bg-pixelRed text-white';
+        btnInc.className = 'text-xs py-1 px-4 rounded-lg font-medium transition bg-gray-800 text-gray-300';
       } else {
-        btnInc.className = 'text-xs py-1 px-3.5 rounded-lg font-medium transition bg-pixelAccent text-gray-950';
-        btnExp.className = 'text-xs py-1 px-3.5 rounded-lg font-medium transition bg-gray-800 text-gray-300';
+        btnInc.className = 'text-xs py-1 px-4 rounded-lg font-medium transition bg-pixelAccent text-gray-950';
+        btnExp.className = 'text-xs py-1 px-4 rounded-lg font-medium transition bg-gray-800 text-gray-300';
       }
     }
 
@@ -654,27 +687,38 @@
       renderAll();
     }
 
-    function renderChart() {
-      const ctx = document.getElementById('categoryChart').getContext('2d');
-      const expRecords = records.filter(r => r.type === '支出');
+    /* --- 多維度圖表分析系統 --- */
+    function switchChartType(type) {
+      currentChartType = type;
+      document.getElementById('btnChartExpense').className = type === '支出' ? 'px-2 py-0.5 rounded-md bg-pixelRed text-white font-medium transition' : 'px-2 py-0.5 rounded-md text-gray-400 hover:text-white transition';
+      document.getElementById('btnChartIncome').className = type === '收入' ? 'px-2 py-0.5 rounded-md bg-pixelAccent text-gray-950 font-medium transition' : 'px-2 py-0.5 rounded-md text-gray-400 hover:text-white transition';
+      renderCharts();
+    }
+
+    function renderCharts() {
+      // 1. 類別比例圓餅圖
+      const pieCtx = document.getElementById('categoryChart').getContext('2d');
+      const filteredRecords = records.filter(r => r.type === currentChartType);
       
       const catMap = {};
-      expRecords.forEach(r => {
+      filteredRecords.forEach(r => {
         catMap[r.category] = (catMap[r.category] || 0) + Number(r.amount);
       });
 
-      const labels = Object.keys(catMap);
-      const data = Object.values(catMap);
+      const pieLabels = Object.keys(catMap);
+      const pieData = Object.values(catMap);
 
-      if (chartInstance) chartInstance.destroy();
+      if (pieChartInstance) pieChartInstance.destroy();
 
-      chartInstance = new Chart(ctx, {
+      pieChartInstance = new Chart(pieCtx, {
         type: 'doughnut',
         data: {
-          labels: labels.length ? labels : ['無數據'],
+          labels: pieLabels.length ? pieLabels : ['無資料'],
           datasets: [{
-            data: data.length ? data : [1],
-            backgroundColor: ['#F4A261', '#E63946', '#2A9D8F', '#E9C46A', '#52B788', '#A8DADC'],
+            data: pieData.length ? pieData : [1],
+            backgroundColor: currentChartType === '支出' 
+              ? ['#F4A261', '#E63946', '#2A9D8F', '#E9C46A', '#9C89B8', '#F0A6CA']
+              : ['#52B788', '#74C69D', '#2A9D8F', '#B7E4C7', '#40916C'],
             borderWidth: 0
           }]
         },
@@ -684,7 +728,44 @@
           plugins: {
             legend: { position: 'right', labels: { boxWidth: 8, font: { size: 10 }, color: '#9CA3AF' } }
           },
-          cutout: '70%'
+          cutout: '68%'
+        }
+      });
+
+      // 2. 近期每日金額波動長條圖
+      const trendCtx = document.getElementById('trendChart').getContext('2d');
+      
+      // 按日期排序與分組
+      const dateMap = {};
+      filteredRecords.slice().reverse().forEach(r => {
+        const shortDate = r.date.slice(5); // 取 MM-DD
+        dateMap[shortDate] = (dateMap[shortDate] || 0) + Number(r.amount);
+      });
+
+      const trendLabels = Object.keys(dateMap).slice(-7); // 取最近7天
+      const trendData = trendLabels.map(k => dateMap[k]);
+
+      if (trendChartInstance) trendChartInstance.destroy();
+
+      trendChartInstance = new Chart(trendCtx, {
+        type: 'bar',
+        data: {
+          labels: trendLabels.length ? trendLabels : ['無資料'],
+          datasets: [{
+            label: currentChartType,
+            data: trendData.length ? trendData : [0],
+            backgroundColor: currentChartType === '支出' ? '#E63946' : '#52B788',
+            borderRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { display: false }, ticks: { color: '#6B7280', font: { size: 9 } } },
+            y: { grid: { color: '#374151' }, ticks: { color: '#6B7280', font: { size: 9 } } }
+          }
         }
       });
     }
@@ -715,7 +796,7 @@
 
       farmState.feed += 1;
       
-      if (farmState.eggDays > 0 && Math.random() > 0.5) {
+      if (farmState.eggDays > 0 && Math.random() > 0.4) {
         farmState.eggDays -= 1;
       }
 
